@@ -506,7 +506,7 @@ def sc_road(c, T, t, d, S, P):
     if -200 < sign_x < 1300:
         rect(c, sign_x, 900, 10, 260, hexc('1a1a1a')); rect(c, sign_x - 70, 880, 150, 60, hexc('1f3b2a'))
         text(c, 'RT 13', sign_x + 5, 922, 28, WHITE, font='JetBrains Mono')
-    bus_side(c, 420, 1080 + 3 * math.sin(T * 9), 0.95, T, lit=0.7)
+    bus_side(c, 500, 1080 + 3 * math.sin(T * 9), 0.95, T, lit=0.7)
     fog(c, T * 1.4, 0.6, y0=900, y1=1500)
     a = prog(t, 0.6, 1.0) * (1 - prog(t, d - 1.2, d - 0.6)); s = '2:14 AM'; n = int(clamp((t - 0.6) / 0.8) * len(s))
     text(c, s[:n], 90, 1420, 64, WHITE, align='l', alpha=a, font='JetBrains Mono')
@@ -528,7 +528,7 @@ def bus_interior(c, T, t, S, P, mirror_empty, woman_vis=1.0, mirror_zoom=0.0):
     c.new_path(); c.rectangle(40, wy0, W - 80, wy1 - wy0); src(c, hexc('050707')); c.set_line_width(30); c.stroke()
     # dashboard
     rect(c, -400, 1050, W + 800, 900, hexc('0c1112')); rect(c, -400, 1050, W + 800, 10, TEAL, 0.15)
-    glow(c, 700, 1120, 160, TEAL, 0.25); text(c, '13', 700, 1135, 40, TEAL, alpha=0.8, font='JetBrains Mono')
+    glow(c, 820, 1100, 120, TEAL, 0.25)
     # mirror
     mx, my, mw, mh = 600, 330, 360, 140
     rrect(c, mx, my, mw, mh, 18); src(c, hexc('020303')); c.fill()
@@ -586,15 +586,15 @@ def sc_stop(c, T, t, d, S, P):
     fog(c, T, 1.0, y0=300, y1=1400)
     rect(c, 0, 1250, W, 700, hexc('07090b'))
     door = prog(t, B(S, 0) - 0.2, B(S, 0) + 0.6)
-    bx = -250
+    bx = 150
     c.save(); camera(c, 540, 1000, 1.0 + 0.1 * t / d)
-    bus_side(c, bx, 1080, 1.05, T, lit=0.8, door_open=door)
+    bus_side(c, bx, 1080, 0.75, T, lit=0.8, door_open=door)
     bb = P.get('board_beat', 2); board = prog(t, B(S, bb) + 0.5, B(S, bb) + 4.0)
     n = 8
     for i in range(n):
-        base_x = 330 + i * 95; sc = 0.42 - i * 0.012
+        base_x = 560 + i * 70; sc = 0.42 - i * 0.012
         appear = prog(t, B(S, 1) + i * 0.12, B(S, 1) + 0.8 + i * 0.12)
-        mv = clamp(board * n - i * 0.6) ; x = base_x - (base_x - (bx + 250)) * smooth(mv)
+        mv = clamp(board * n - i * 0.6) ; mv = 0 if i == 2 else mv; x = base_x - (base_x - (bx + 185)) * smooth(mv)
         a = appear * (1 - prog(mv, 0.85, 1.0))
         if a <= 0: continue
         person(c, x, 1010 + (i % 2) * 8, sc, rim=hexc('b9c3d6'), rim_dir=(-1, -0.3), rim_a=0.35, alpha=a, hair=(i in (2, 5)),
@@ -659,7 +659,7 @@ def captions(c, T):
             if not (t0 <= T < t1): continue
             col = CAPCOL.get(l['who'], WHITE); italic = l['who'] != 'narrator'; sl = cairo.FONT_SLANT_ITALIC if italic else 0
             full = ' '.join(words[j] for j in cc); x = W / 2 - tw(c, full, 66, slant=sl) / 2; y = 1640
-            if italic: text(c, CAPNAME.get(l['who'], ''), W / 2, 1560, 30, col, spacing=6, alpha=0.85)
+            if italic: text(c, 'ROOM 9' if l.get('fx') == 'phone' else CAPNAME.get(l['who'], ''), W / 2, 1560, 30, col, spacing=6, alpha=0.85)
             for j in cc:
                 if times[j] > T: break
                 x += text(c, words[j] + ' ', x, y, 66, col, align='l', alpha=prog(T, times[j], times[j] + 0.08), outline=12, slant=sl)

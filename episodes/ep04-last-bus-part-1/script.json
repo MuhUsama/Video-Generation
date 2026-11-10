@@ -1,0 +1,16 @@
+{"voices":{"narrator":["am_onyx",0.92],"marcus":["am_fenrir",0.98],"woman":["bf_emma",0.82]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 4  ·  THE LAST BUS, PART 1","l1":"Part 2 drops tomorrow","l2":"Follow so you don’t miss it"},
+ "params":{"road":{},"bus":{"woman":true},"mirror":{"empty_beat":0},"sign":{}},
+ "lines":[
+  {"scene":"road","who":"narrator","pre":1.0,"text":"Two fourteen A.M. Route thirteen. The last bus of the night.","sfx":["engine_start"]},
+  {"scene":"road","who":"narrator","pre":0.3,"text":"Marcus had driven it for ten years. It was always empty."},
+  {"scene":"bus","who":"narrator","pre":0.5,"text":"Tonight, at the third stop, a woman got on.","sfx":["doors"]},
+  {"scene":"bus","who":"woman","fx":"close","pre":0.5,"text":"Hollow Creek, please."},
+  {"scene":"bus","who":"marcus","pre":0.4,"text":"Ma'am, there's no Hollow Creek on this route."},
+  {"scene":"bus","who":"woman","fx":"close","pre":0.6,"text":"There is tonight."},
+  {"scene":"mirror","who":"narrator","pre":0.6,"text":"Marcus glanced at the mirror. Her seat was empty."},
+  {"scene":"mirror","who":"narrator","pre":0.3,"text":"But he could still hear her breathing."},
+  {"scene":"sign","who":"narrator","pre":0.7,"text":"Then, out of the fog, a bus stop appeared."},
+  {"scene":"sign","who":"woman","fx":"close","pre":0.9,"text":"This is my stop. And yours.","sfx":["sting_soft"]},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

@@ -1,0 +1,18 @@
+{"voices":{"narrator":["am_onyx",0.92],"daniel":["am_michael",1.0],"other":["am_michael",0.85]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 3  ·  ROOM 9, FINALE","l1":"A new story starts tomorrow","l2":"Follow for more Night Shift"},
+ "params":{"hall":{"walker":false,"run":true},"exterior":{"novacancy":2,"pullout":true},
+   "logbook":{"kind":"log","header":"NIGHT SHIFT LOG","rows":[["Oct 10","All quiet.  —D.R."],["Oct 11","Rm 9 smoke alarm. Reset.  —D.R."]],"reveal":[{"beat":0,"type":"row","row":["Oct 12","FIRE - ROOM 9."]},{"beat":1,"type":"stamp","text":"CLERK MISSING"}]}},
+ "lines":[
+  {"scene":"hall","who":"narrator","pre":0.6,"text":"Daniel dropped the phone and ran."},
+  {"scene":"desk_other","who":"narrator","pre":0.5,"text":"Downstairs, the desk lamp was still on."},
+  {"scene":"desk_other","who":"narrator","pre":0.3,"text":"And someone was sitting in his chair."},
+  {"scene":"desk_other","who":"daniel","pre":0.4,"text":"Hey! Who are you?"},
+  {"scene":"desk_other","who":"narrator","pre":0.6,"text":"The man slowly turned around. He had Daniel's face."},
+  {"scene":"desk_other","who":"other","fx":"close","pre":0.6,"text":"Go back to work, Daniel. Your shift isn't over."},
+  {"scene":"logbook","who":"narrator","pre":0.6,"text":"On the desk lay the night log. The last entry was three years old."},
+  {"scene":"logbook","who":"narrator","pre":0.3,"text":"Fire in room nine. Night clerk, missing."},
+  {"scene":"exterior","who":"narrator","pre":0.6,"text":"Daniel never left the Pinewood Motel."},
+  {"scene":"exterior","who":"narrator","pre":0.3,"text":"He's still working the night shift."},
+  {"scene":"exterior","who":"narrator","pre":0.4,"text":"And tonight, the phone in room nine is ringing again.","sfx":["ring_far"]},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

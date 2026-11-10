@@ -1,0 +1,18 @@
+{"voices":{"narrator":["am_onyx",0.92],"marcus":["am_fenrir",0.98],"woman":["bf_emma",0.82]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 5  ·  THE LAST BUS, FINALE","l1":"A new story starts next time","l2":"Follow for more Night Shift"},
+ "params":{"stop":{"board_beat":2},
+   "news":{"kind":"news","header":"THE HOLLOW CREEK GAZETTE","head":["BUS PLUNGES","INTO CREEK"],"sub":"Route 13: no survivors","photo":"bus","date":"March 3, 1994"},
+   "dawn":{},
+   "ticket":{"kind":"ticket","reveal":[{"beat":0,"type":"date"},{"beat":1,"type":"name","text":"MARCUS HALE"}]}},
+ "lines":[
+  {"scene":"stop","who":"narrator","pre":0.8,"text":"The bus doors hissed open by themselves.","sfx":["doors"]},
+  {"scene":"stop","who":"narrator","pre":0.3,"text":"In the fog stood a line of people. Silent. Soaking wet."},
+  {"scene":"stop","who":"narrator","pre":0.3,"text":"One by one, they climbed aboard. None of them paid."},
+  {"scene":"stop","who":"marcus","pre":0.4,"text":"Where are you all going?"},
+  {"scene":"stop","who":"woman","fx":"close","pre":0.6,"text":"Home. We've waited thirty years for this bus."},
+  {"scene":"news","who":"narrator","pre":0.6,"text":"In nineteen ninety four, the last bus on Route thirteen crashed into Hollow Creek. Nobody survived."},
+  {"scene":"dawn","who":"narrator","pre":0.6,"text":"When the sun came up, the bus was empty again."},
+  {"scene":"ticket","who":"narrator","pre":0.5,"text":"Only a single ticket was left on the seat. For tomorrow night."},
+  {"scene":"ticket","who":"narrator","pre":0.5,"text":"One passenger. Marcus Hale."},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

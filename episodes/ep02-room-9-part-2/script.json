@@ -1,0 +1,19 @@
+{"voices":{"narrator":["am_onyx",0.92],"daniel":["am_michael",1.0]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 2  ·  ROOM 9, PART 2","l1":"The finale drops tomorrow","l2":"Follow so you don’t miss it"},
+ "params":{"behind":{"recap":true},"hall":{"walker":false,"footprints":true},
+   "book":{"kind":"book","header":"GUEST REGISTER","rows":[["R. Moss","Room 4","11:52 PM"],["J. & A. Pike","Room 7","1:10 AM"]],"reveal":[{"beat":0,"type":"row","row":["","Room 9","3:07 AM"]},{"beat":1,"type":"sig","text":"Daniel Reyes"}]},
+   "room_phone":{}},
+ "lines":[
+  {"scene":"behind","who":"narrator","pre":0.6,"text":"Last time, a voice whispered from right behind him.","sfx":["thunder"]},
+  {"scene":"hall","who":"narrator","pre":0.6,"text":"Daniel spun around. The hallway was empty."},
+  {"scene":"hall","who":"narrator","pre":0.4,"text":"Just a trail of wet, black footprints, leading into room nine."},
+  {"scene":"room","who":"narrator","pre":0.6,"text":"Inside, everything was burnt. Everything, except one thing."},
+  {"scene":"room","who":"narrator","pre":0.3,"text":"The guest book, lying open on the bed."},
+  {"scene":"book","who":"narrator","pre":0.5,"text":"The last entry was written tonight. Room nine. Three oh seven A.M."},
+  {"scene":"book","who":"narrator","pre":0.4,"text":"And the signature was his own."},
+  {"scene":"book","who":"daniel","pre":0.4,"text":"That's my handwriting."},
+  {"scene":"room_phone","who":"narrator","pre":0.9,"text":"Then the burnt phone on the wall began to ring.","sfx":["ring"]},
+  {"scene":"room_phone","who":"daniel","pre":0.7,"text":"Hello?","sfx":["click"]},
+  {"scene":"room_phone","who":"daniel","fx":"phone","pre":0.9,"text":"Please... don't send anyone up."},
+  {"scene":"title","who":"none","pre":0.5,"text":""}
+ ]}
