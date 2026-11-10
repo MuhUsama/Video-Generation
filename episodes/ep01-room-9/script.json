@@ -1,0 +1,14 @@
+[
+ {"scene":"exterior","who":"narrator","pre":1.2,"text":"Three oh seven A.M. The Pinewood Motel."},
+ {"scene":"exterior","who":"narrator","pre":0.3,"text":"Daniel had worked the night shift here for six years. Nothing ever happened."},
+ {"scene":"desk","who":"narrator","pre":0.5,"text":"Until the phone rang."},
+ {"scene":"desk","who":"narrator","pre":1.6,"text":"The little screen said, Room nine."},
+ {"scene":"desk","who":"daniel","pre":0.4,"text":"Front desk. How can I help you?"},
+ {"scene":"desk","who":"caller","pre":0.8,"text":"Please... don't send anyone up. He's still in here with me."},
+ {"scene":"keys","who":"narrator","pre":0.7,"text":"Daniel froze. Room nine had been sealed for three years. Ever since the fire."},
+ {"scene":"keys","who":"narrator","pre":0.3,"text":"He looked at the key board. Hook number nine was empty."},
+ {"scene":"hall","who":"narrator","pre":0.7,"text":"He grabbed the flashlight and climbed the stairs. The door to room nine was open."},
+ {"scene":"behind","who":"caller","pre":1.4,"text":"I told you. Not to come up."},
+ {"scene":"behind","who":"narrator","pre":0.5,"text":"But this time, the voice wasn't coming from a phone. It was right behind him."},
+ {"scene":"title","who":"none","pre":0.6,"text":""}
+]
