@@ -135,6 +135,15 @@ venv = np.convolve(np.abs(vox), np.ones(2400) / 2400, 'same')
 mix = vox + fxb * (1 - 0.4 * np.clip(venv / 0.04, 0, 1))
 mix = mix / np.abs(mix).max() * 0.9
 sf.write(EP + 'mix.wav', mix.astype(np.float32), SR)
+# lip-sync envelope at 30 fps per line
+hop = SR // 30
+for l in lines:
+    if l['who'] == 'none': continue
+    s0 = int(l['start'] * SR); n = int(l['dur'] * 30) + 1
+    seg = vox[s0:s0 + n * hop]
+    env = [float(np.sqrt(np.mean(seg[i * hop:(i + 1) * hop] ** 2))) if len(seg[i * hop:(i + 1) * hop]) else 0.0 for i in range(n)]
+    ref = np.percentile(env, 90) if max(env) > 0 else 1
+    l['env'] = [round(min(1.0, e / ref), 3) for e in env]
 json.dump({'total': TOTAL, 'scenes': scenes, 'lines': lines, 'thunder': sorted(thunders), 'rings': ring_times,
            'params': S.get('params', {}), 'title': S['title']}, open(EP + 'timing.json', 'w'), indent=1)
 print(round(TOTAL, 2), [(s['id'], round(s['start'], 1)) for s in scenes])

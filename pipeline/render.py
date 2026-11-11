@@ -639,6 +639,321 @@ SCENES = {'exterior': sc_exterior, 'hall': sc_hall, 'behind': sc_behind, 'room':
           'desk_other': sc_desk_other, 'road': sc_road, 'bus': sc_bus, 'mirror': sc_mirror, 'sign': sc_sign,
           'stop': sc_stop, 'dawn': sc_dawn, 'title': sc_title}
 
+# ===================== CHARACTER FACE SCENES =====================
+import chars as CH
+CHAR_OF = {'daniel': 'daniel', 'other': 'double', 'marcus': 'marcus', 'woman': 'woman'}
+def mouth_for(who, T):
+    for l in LINES:
+        if l['who'] == who and l.get('fx') != 'phone' and 'env' in l and l['start'] <= T < l['start'] + l['dur']:
+            i = int((T - l['start']) * 30); e = l['env']
+            v = (e[max(0, i - 1)] + 2 * e[min(i, len(e) - 1)] + e[min(i + 1, len(e) - 1)]) / 4
+            return clamp(v * 0.95)
+    return 0.0
+def speaking(who, T):
+    return any(l['who'] == who and l['start'] <= T < l['start'] + l['dur'] for l in LINES)
+def cut(c, t, at, dur=0.07):
+    if at <= t < at + dur: rect(c, 0, 0, W, H, BLACK)
+def face(c, who, x, y, s, T, **kw):
+    spk = {'daniel': 'daniel', 'double': 'other', 'marcus': 'marcus', 'woman': 'woman'}[who]
+    kw.setdefault('mouth', mouth_for(spk, T))
+    CH.draw(c, who, x, y, s, T=T, **kw)
+def handset_at(c, x, y, s, ang=-0.9):
+    c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s); c.new_path()
+    c.move_to(-95, 0); c.curve_to(-60, -42, 60, -42, 95, 0); c.line_to(85, 30); c.line_to(-85, 30); c.close_path(); src(c, hexc('16110d')); c.fill()
+    c.restore()
+
+def desk_front(c, T, lamp=1.0):
+    rect(c, -400, 1250, W + 800, 900, hexc('1c130c')); rect(c, -400, 1250, W + 800, 14, AMBER, 0.35)
+    g = cairo.LinearGradient(0, 1250, 0, 1600); g.add_color_stop_rgba(0, 1, 0.7, 0.3, 0.12 * lamp); g.add_color_stop_rgba(1, 0, 0, 0, 0)
+    c.set_source(g); c.rectangle(-400, 1250, W + 800, 400); c.fill()
+    quad(c, [(760, 1250), (790, 1060), (810, 1060), (840, 1250)], hexc('100c08'))
+    quad(c, [(720, 1080), (880, 1080), (840, 990), (760, 990)], hexc('2b2015'))
+    glow(c, 800, 1090, 120, AMBER, 0.8 * lamp)
+
+def sc_desk(c, T, t, d, S, P):
+    b0, b1, b2, b3 = B(S, 0), B(S, 1), B(S, 2), B(S, 3)
+    rin = ringing(T)
+    pick = b2 - 0.3
+    push = smooth(prog(t, b3, b3 + 2.5))
+    z = 1.0 + 0.06 * t / d + 0.9 * push
+    c.save(); camera(c, 540 - 120 * push, 1010 - 110 * push, z, shake=0.15 * rin, T=T)
+    interior_bg(c, T, flash(T) * 0.4)
+    # Daniel
+    look_phone = smooth(prog(t, (TM['rings'][0] - S['start']) + 0.2 if TM['rings'] else 99, (TM['rings'][0] - S['start']) + 0.7 if TM['rings'] else 99))
+    up = t >= pick
+    turn = 0.15 + 0.3 * look_phone * (1 - smooth(prog(t, pick + 0.2, pick + 0.8)))
+    look = (0.2 + 0.8 * look_phone, 0.7 * (1 - look_phone) + 0.2 * look_phone)
+    if up: look = (0.1 + 0.25 * math.sin(t * 0.7), 0.0)
+    expr, expr2, ek = 'neutral', 'worried', smooth(prog(t, b0, b0 + 1.0))
+    if t > b3 + 1.2: expr, expr2, ek = 'worried', 'fear', smooth(prog(t, b3 + 1.2, b3 + 3.0))
+    face(c, 'daniel', 420, 900, 1.15, T, turn=turn, look=look, expr=expr, expr2=expr2, ek=ek, light=(1, -0.3), light_col=AMBER, ambient=0.8)
+    if up:
+        handset_at(c, 560, 900, 0.9, -1.25)
+        CH.hand(c, 560, 960, 1.0, CH.CHARS['daniel']['skin'], 0.3)
+    desk_front(c, T)
+    phone(c, 760, 1250, 1.0, T, rin, prog(t, b1 - 0.3, b1 + 0.2), up)
+    if up:
+        c.new_path(); c.move_to(700, 1225); c.curve_to(700, 1300, 600, 1150, 560, 990); src(c, hexc('2c241e')); c.set_line_width(5); c.stroke()
+    if rin:
+        for k in range(3):
+            r = ((T * 260) + k * 70) % 210; c.new_path(); c.arc(760, 1190, 60 + r, PI * 1.15, PI * 1.85); src(c, AMBER, 0.6 * (1 - r / 210)); c.set_line_width(5); c.stroke()
+    c.restore()
+    for l in LINES:
+        if l['who'] == 'caller' and l.get('fx') == 'phone' and l['start'] <= T <= l['start'] + l['dur']:
+            k = T - l['start']; c.set_source_rgba(1, 0.2, 0.3, 0.7); c.set_line_width(4); c.new_path()
+            for i in range(40):
+                h = 10 + 50 * abs(math.sin(k * 9 + i * 1.7)) * abs(math.sin(i * 0.4 + k * 3))
+                c.move_to(340 + i * 10, 1450 - h / 2); c.line_to(340 + i * 10, 1450 + h / 2)
+            c.stroke()
+
+def sc_keys(c, T, t, d, S, P):
+    b0, b1 = B(S, 0), B(S, 1)
+    if t < b1:
+        mem = prog(t, b0 + 2.6, b0 + 3.3)   # newspaper memory near the end of the first line
+        if mem < 1:
+            c.save(); camera(c, 540, 860, 1.0 + 0.12 * t / b1)
+            rect(c, -400, -400, W + 800, H + 800, hexc('0d0a09')); glow(c, 900, 1000, 900, AMBER, 0.25)
+            face(c, 'daniel', 540, 820, 2.6, T, turn=0.05, look=(-0.2 + 0.4 * math.sin(t * 0.6), 0.1), expr='worried', expr2='shock', ek=smooth(prog(t, 0.2, 1.0)),
+                 light=(1, -0.2), light_col=AMBER, ambient=0.7, mouth=0.08)
+            c.restore()
+        if mem > 0:
+            c.push_group()
+            rect(c, 0, 0, W, H, hexc('0b0806'))
+            for i in range(60):
+                r = random.Random(i); x = r.uniform(0, W); sp = r.uniform(60, 180); y = H - ((t * sp + r.uniform(0, H)) % H)
+                circ(c, x + 20 * math.sin(t * 2 + i), y, r.uniform(2, 5), hexc('ff7a2e'), 0.6)
+            glow(c, W / 2, 1500, 900, hexc('ff5a1e'), 0.22)
+            c.save(); c.translate(W / 2, 900); c.rotate(-0.05 + 0.02 * t); sc = 0.9 + 0.05 * t; c.scale(sc, sc)
+            rect(c, -400, -330, 800, 660, hexc('d8ccae'))
+            text(c, 'THE DAILY HERALD', 0, -270, 34, hexc('2a2118'), font='DejaVu Serif'); rect(c, -360, -250, 720, 3, hexc('2a2118'))
+            text(c, 'FIRE AT PINEWOOD', 0, -175, 64, hexc('1a140e'), font='DejaVu Serif'); text(c, 'MOTEL', 0, -105, 64, hexc('1a140e'), font='DejaVu Serif')
+            text(c, 'Room 9 sealed after tragedy', 0, -45, 34, hexc('5a1a10'), font='DejaVu Serif', slant=cairo.FONT_SLANT_ITALIC)
+            rect(c, -360, -10, 340, 260, hexc('2a2118'), 0.85)
+            quad(c, [(-340, 250), (-270, 120), (-200, 170), (-120, 60), (-40, 250)], hexc('5c4a36'))
+            for i in range(8): rect(c, 10, i * 30, 350 - (i % 3) * 40, 10, hexc('6b5e4a'), 0.8)
+            c.restore(); c.pop_group_to_source(); c.paint_with_alpha(mem)
+        return
+    tt = t - b1; k = smooth(prog(tt, 0.8, 3.2))
+    c.save(); camera(c, 800 - (800 - 690) * k, 650 + (790 - 650) * k, 1.0 + 1.6 * k)
+    interior_bg(c, T, 0)
+    hx, hy = 690, 760
+    pulse = prog(tt, 2.6, 3.0) * (0.6 + 0.4 * math.sin(T * 8))
+    glow(c, hx, hy + 30, 70, NEON, 0.5 * pulse); text(c, '9', hx + 18, hy - 10, 18, NEON, alpha=pulse)
+    c.restore()
+
+def sc_behind(c, T, t, d, S, P):
+    fl = flash(T); recap = P.get('recap')
+    z = 1.0 + 0.15 * smooth(t / d)
+    c.save(); camera(c, W / 2, 900, z, shake=fl * 0.6, T=T)
+    rect(c, -400, -400, W + 800, H + 800, mix(hexc('07080b'), hexc('8193b8'), fl * 0.9))
+    rect(c, 230, 300, 620, 1300, mix(hexc('030304'), hexc('1a1d26'), fl))
+    c.new_path(); c.rectangle(230, 300, 620, 1300); src(c, mix(hexc('1b1610'), hexc('c7d2ea'), fl)); c.set_line_width(26); c.stroke()
+    text(c, '9', 540, 270, 60, mix(hexc('6b5b40'), WHITE, fl))
+    if recap: seen = clamp(fl * 1.5 + 0.35); eyes = 1.0; lean = 1.0; hp = 1.0; b0 = -5; b1 = -5
+    else:
+        b0, b1 = B(S, 0), B(S, 1)
+        seen = clamp(fl * 1.5 + 0.35 * prog(t, b0 + 0.2, b0 + 1.6)); eyes = prog(t, b0 + 0.6, b0 + 1.4)
+        lean = smooth(prog(t, b1 + 1.5, d)); hp = smooth(prog(t, b1 + 2.6, b1 + 3.4))
+    creature(c, 640, 820 + 80 * lean, 1.15 + 0.25 * lean, seen, eyes=eyes, lean=lean)
+    side = smooth(prog(t, b0 + 0.6, b0 + 1.4))
+    face(c, 'daniel', 470, 1130, 1.6, T, turn=-0.1 + 0.15 * side, look=(0.9 * side, -0.1 * side), expr='worried', expr2='fear', ek=max(side, 1.0 if recap else 0),
+         light=(-0.3, 1), light_col=COLD, ambient=0.4 + 0.4 * fl, under=True, mouth=0.12 + 0.04 * math.sin(T * 20))
+    if hp > 0:
+        c.save(); c.translate(760 - 40 * hp, 1360 - 40 * hp)
+        for i in range(4):
+            c.new_path(); c.move_to(i * 22, 0); c.curve_to(i * 22 - 5, 60 * hp, i * 22 - 10, 110 * hp, i * 22 - 18, 150 * hp)
+            src(c, hexc('020203')); c.set_line_width(14); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
+        quad(c, [(-20, -60), (90, -60), (80, 30), (-10, 30)], hexc('020203')); c.restore()
+    c.restore()
+    if fl > 0: rect(c, 0, 0, W, H, WHITE, fl * 0.3)
+
+_old_hall = sc_hall
+def sc_hall(c, T, t, d, S, P):
+    walker = P.get('walker', True) and not P.get('run')
+    _old_hall(c, T, t, d, S, dict(P, walker=False))
+    if walker:
+        bob = math.sin(t * 6) * 6
+        CH.draw(c, 'daniel', 300, 1500 + bob * 0.5, 1.5, T=T, back=True, light=(0.5, -1), light_col=COLD, ambient=0.35)
+        c.new_path(); c.move_to(470, 1800); c.line_to(560, 1580); c.set_line_width(70); src(c, hexc('1c241c')); c.stroke()
+
+def sc_room_phone(c, T, t, d, S, P):
+    b0, b1, b2 = B(S, 0), B(S, 1), B(S, 2)
+    rin = ringing(T) and t < b1
+    push = smooth(prog(t, b2 - 0.3, d))
+    c.save(); camera(c, 620 - 100 * push, 900 - 40 * push, 1.0 + 0.6 * push, shake=0.2 * rin + 0.3 * prog(t, b2 + 1.2, b2 + 1.6) * (1 - prog(t, d - 0.4, d)), T=T)
+    burnt_room(c, T, flash(T))
+    px, py = 800, 820
+    c.save(); c.translate(px + (math.sin(T * 90) * 4 if rin else 0), py)
+    rrect(c, -80, -120, 160, 240, 18); src(c, hexc('1a1512')); c.fill(); circ(c, 0, 30, 52, hexc('0d0a08'))
+    for i in range(10): a = -PI * 0.2 + i * PI * 0.15; circ(c, 34 * math.cos(a), 30 + 34 * math.sin(a), 7, hexc('2c241e'))
+    if t < b1 - 0.3:
+        c.new_path(); c.move_to(-95, -100); c.curve_to(-60, -150, 60, -150, 95, -100); c.line_to(80, -80); c.line_to(-80, -80); c.close_path(); src(c, hexc('120e0b')); c.fill()
+    c.restore()
+    if rin:
+        for k in range(3):
+            r = ((T * 260) + k * 70) % 210; c.new_path(); c.arc(px, py - 100, 70 + r, PI * 1.1, PI * 1.9); src(c, AMBER, 0.5 * (1 - r / 210)); c.set_line_width(5); c.stroke()
+    up = t >= b1 - 0.3
+    hear = smooth(prog(t, b2 + 0.3, b2 + 1.0))
+    expr = 'worried' if not hear else 'worried'
+    face(c, 'daniel', 470, 860, 1.3, T, turn=0.55, look=(0.8, -0.1) if not up else (0.3 - 0.3 * hear, 0.1), expr='worried', expr2='shock', ek=hear,
+         light=(1, -0.2), light_col=COLD, ambient=0.6)
+    if up:
+        c.new_path(); c.move_to(px - 40, py + 40); c.curve_to(px - 30, py + 260, 700, 1000, 640, 900); src(c, hexc('2c241e')); c.set_line_width(5); c.stroke()
+        handset_at(c, 600, 860, 0.95, -1.2); CH.hand(c, 610, 930, 1.05, CH.CHARS['daniel']['skin'], 0.4)
+    c.restore()
+    ash(c, T, 0.6); flashlight(c, 600, 860, r0=160, r1=850, dark=0.7)
+    if hear > 0:
+        g = cairo.RadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 1200); g.add_color_stop_rgba(0, 0.5, 0, 0, 0); g.add_color_stop_rgba(1, 0.5, 0, 0.02, 0.5 * hear * (0.7 + 0.3 * math.sin(T * 6)))
+        c.set_source(g); c.paint()
+
+def sc_desk_other(c, T, t, d, S, P):
+    b0, b1, b2, b3, b4 = [B(S, i) for i in range(5)]
+    if t < b2:  # wide: someone in the chair, seen from behind
+        c.save(); camera(c, 540, 1000, 1.0 + 0.08 * t / b2)
+        interior_bg(c, T, flash(T) * 0.4, lamp=0.9)
+        rrect(c, 390, 980, 300, 320, 40); src(c, hexc('120c08')); c.fill()
+        CH.draw(c, 'double', 540, 930, 0.9, T=T, back=True, light=(1, -0.5), light_col=AMBER, ambient=0.7)
+        desk_front(c, T, 0.9)
+        c.restore()
+        CH.draw(c, 'daniel', 170, 1480, 1.6, T=T, back=True, light=(0.6, -1), light_col=AMBER, ambient=0.4)
+    elif t < b3:  # Daniel reacts
+        cut(c, t, b2)
+        c.save(); camera(c, 540, 900, 1.0 + 0.1 * (t - b2))
+        rect(c, -400, -400, W + 800, H + 800, hexc('0c0d10')); glow(c, 700, 900, 800, AMBER, 0.2)
+        face(c, 'daniel', 520, 860, 2.4, T, turn=0.2, look=(0.5, 0), expr='worried', expr2='fear', ek=0.4, light=(1, -0.2), light_col=AMBER, ambient=0.75)
+        c.restore(); cut(c, t, b2)
+    elif t < b4:  # the double turns around
+        tt = t - b3; turn_k = smooth(prog(tt, 0.3, 1.4)); zoom = smooth(prog(tt, 1.6, 3.0))
+        c.save(); camera(c, 540, 1000 - 120 * zoom, 1.0 + 1.0 * zoom)
+        interior_bg(c, T, 0, lamp=0.9 + 0.1 * math.sin(T * 13))
+        rrect(c, 390, 980, 300, 320, 40); src(c, hexc('120c08')); c.fill()
+        if turn_k < 1: CH.draw(c, 'double', 540, 930, 0.9, T=T, back=True, light=(1, -0.5), light_col=AMBER, ambient=0.7, alpha=1 - turn_k)
+        if turn_k > 0: face(c, 'double', 540, 930, 0.9, T, turn=0.6 * (1 - turn_k), expr='neutral', expr2='sinister', ek=zoom, light=(1, -0.3), light_col=AMBER, ambient=0.7, alpha=turn_k)
+        desk_front(c, T, 0.9)
+        c.restore(); cut(c, t, b3)
+    else:  # it speaks
+        cut(c, t, b4)
+        c.save(); camera(c, 540, 880, 1.0 + 0.15 * (t - b4) / max(0.1, d - b4))
+        rect(c, -400, -400, W + 800, H + 800, hexc('0d0a09')); glow(c, 860, 1000, 900, AMBER, 0.3 * (0.9 + 0.1 * math.sin(T * 13)))
+        face(c, 'double', 540, 860, 2.5, T, turn=0.0, look=(0, 0), expr='sinister', light=(1, -0.3), light_col=AMBER, ambient=0.7, eyes_glow=0.6)
+        c.restore()
+
+_old_paper = paper_scene
+def paper_scene(c, T, t, d, S, P):
+    f = P.get('face')
+    if f and t >= B(S, f['beat']) - 0.1:
+        tt = t - B(S, f['beat']); cut(c, tt, -0.1)
+        c.save(); camera(c, 540, 880, 1.0 + 0.1 * tt)
+        rect(c, -400, -400, W + 800, H + 800, hexc('0d0a09')); glow(c, 540, 1300, 900, AMBER, 0.25)
+        face(c, f['who'], 540, 860, 2.4, T, turn=0.0, look=(0, 0.6), expr='shock', light=(0, 1), light_col=AMBER, ambient=0.65, under=True)
+        c.restore(); return
+    _old_paper(c, T, t, d, S, P)
+
+def bus_aisle(c, T, light=TEAL, warm=0.0, woman=None):
+    rect(c, -400, -400, W + 800, H + 800, mix(hexc('0a1012'), hexc('3a2a22'), warm))
+    vx, vy = 360, 700
+    quad(c, [(-400, -400), (W + 400, -400), (vx + 70, vy - 90), (vx - 70, vy - 90)], mix(hexc('0e1416'), hexc('6a4a36'), warm))
+    quad(c, [(-400, H + 400), (W + 400, H + 400), (vx + 70, vy + 90), (vx - 70, vy + 90)], mix(hexc('0c1011'), hexc('2a1f18'), warm))
+    # rear window with streaking lights
+    rect(c, vx - 70, vy - 90, 140, 180, mix(hexc('05080a'), hexc('ffb36b'), warm * 0.6))
+    for i in range(6):  # ceiling light strips
+        f = (i + 1) / 7; y = vy - 90 - (vy + 400) * (1 - f) ** 1.4
+        if y > -400: rect(c, vx - 60 * (1 + 4 * (1 - f)), y, 120 * (1 + 4 * (1 - f)), 6 + 10 * (1 - f), light, 0.35 * (1 - warm))
+    for side in (-1, 1):
+        for i in range(6):
+            f = 0.12 + i * 0.15; k = (1 - f) ** 1.5
+            x = vx + side * (80 + 900 * k); y = vy + 90 + 1100 * k * 0.8; s = 0.25 + 2.0 * k
+            rrect(c, x - (side < 0) * 180 * s, y - 230 * s, 180 * s, 240 * s, 18 * s); src(c, mix(hexc('1a2426'), hexc('6b3a2a'), warm)); c.fill()
+            # passing streetlight on side windows
+            wy = y - 420 * s; ph = (T * 0.8 + i * 0.37) % 1
+            glow(c, x + side * 40 * s, wy, 160 * s, mix(hexc('ffd9a0'), hexc('ffb36b'), warm), (0.5 * max(0, 1 - abs(ph - 0.5) * 6)) * (1 - warm) + 0.3 * warm)
+    if woman:
+        wx, wy, ws, wa = woman
+        rrect(c, wx - 70, wy + 40, 140, 160, 14); src(c, hexc('1a2426')); c.fill()
+        face(c, 'woman', wx, wy, ws, T, turn=0.15, look=(0.2, 0.1), expr='calm', light=(0, -1), light_col=TEAL, ambient=0.75, alpha=wa)
+        rrect(c, wx - 80, wy + 110, 160, 120, 14); src(c, hexc('1a2426')); c.fill()
+
+def sc_bus(c, T, t, d, S, P):
+    b0, b1, b2, b3 = [B(S, i) for i in range(4)]
+    wv = prog(t, b0 + 0.8, b0 + 1.8)
+    onW = 1 if (b1 <= t < b2) or t >= b3 else 0
+    tgt = 'woman' if onW else 'marcus'
+    if tgt == 'woman':
+        c.save(); camera(c, 360, 660, 2.4 + 0.1 * math.sin(t * 0.5))
+        bus_aisle(c, T, woman=(360, 650, 0.32, 1.0)); c.restore()
+        cut(c, t, b1); cut(c, t, b3)
+        return
+    c.save(); camera(c, 540, 960, 1.0 + 0.04 * math.sin(t * 0.6), shake=0.04, T=T)
+    walkin = 1 - smooth(prog(t, b0 + 0.2, b0 + 2.0))
+    bus_aisle(c, T, woman=(360, 650 + 250 * walkin, 0.32 + 0.3 * walkin, wv))
+    glance = smooth(prog(t, b2 + 0.4, b2 + 1.0))
+    face(c, 'marcus', 760, 1080, 1.55, T, turn=-0.35 - 0.2 * glance, look=(-0.6 * glance, -0.4 * glance), expr='neutral', expr2='worried', ek=prog(t, b1, b1 + 1.0),
+         light=(1, -0.5), light_col=TEAL, ambient=0.7)
+    c.save(); c.translate(700, 1700); c.scale(1, 0.35); c.new_path(); c.arc(0, 0, 330, 0, 2 * PI); src(c, hexc('050707')); c.set_line_width(46); c.stroke(); c.restore()
+    CH.hand(c, 440, 1690, 1.3, CH.CHARS['marcus']['skin'], -0.9); CH.hand(c, 960, 1690, 1.3, CH.CHARS['marcus']['skin'], 0.9)
+    c.restore(); cut(c, t, b2)
+
+def sc_mirror(c, T, t, d, S, P):
+    b0, b1 = B(S, 0), B(S, 1)
+    empty = t > b0 + 1.6
+    c.save(); camera(c, 540, 900, 1.0 + 0.1 * t / d, shake=0.03, T=T)
+    rect(c, -400, -400, W + 800, H + 800, hexc('0a1012'))
+    # mirror at top
+    mx, my, mw, mh = 220, 300, 640, 260
+    rrect(c, mx - 14, my - 14, mw + 28, mh + 28, 30); src(c, hexc('020303')); c.fill()
+    c.save(); rrect(c, mx, my, mw, mh, 22); c.clip()
+    c.translate(mx + mw / 2, my + mh / 2); c.scale(0.38, 0.38); c.translate(-360, -680)
+    bus_aisle(c, T, woman=None if empty else (360, 650, 0.32, 1.0))
+    c.restore()
+    glow(c, mx + mw / 2, my + mh / 2, 300, TEAL, 0.06)
+    shock = smooth(prog(t, b0 + 1.6, b0 + 2.2)); fear = smooth(prog(t, b1, b1 + 1.5))
+    face(c, 'marcus', 540, 1180, 2.2, T, turn=0.0, look=(0.0, -1.0 + 0.6 * fear * math.sin(t * 2)), expr='worried', expr2='shock' if fear < 0.5 else 'fear', ek=max(shock, fear),
+         light=(0, -1), light_col=TEAL, ambient=0.65, mouth=0.15 * shock)
+    c.restore()
+    if empty:
+        k = prog(t, b1, b1 + 2)
+        glow(c, 540, 1000, 320 + 60 * math.sin(T * 2.4), hexc('cfe4ff'), 0.14 * k * (0.5 + 0.5 * math.sin(T * 2.4)))
+
+_old_sign = sc_sign
+def sc_sign(c, T, t, d, S, P):
+    b1 = B(S, 1)
+    if t < b1 - 0.1: return _old_sign(c, T, t, d, S, P)
+    cut(c, t, b1 - 0.1)
+    c.save(); camera(c, 540, 860, 1.0 + 0.2 * smooth(prog(t, b1, d)))
+    rect(c, -400, -400, W + 800, H + 800, hexc('06090c')); glow(c, 540, 700, 900, hexc('fff2c8'), 0.18)
+    fog(c, T, 1.0, y0=200, y1=1500)
+    face(c, 'woman', 540, 860, 2.4, T, turn=0.0, look=(0, 0), expr='calm', expr2='sinister', ek=smooth(prog(t, b1 + 1.0, b1 + 2.0)), light=(0, -1), light_col=hexc('fff2c8'), ambient=0.8, eyes_glow=0.4)
+    c.restore(); fog(c, T * 1.3, 0.8, y0=900, y1=1700)
+
+_old_stop = sc_stop
+def sc_stop(c, T, t, d, S, P):
+    b3, b4 = B(S, 3), B(S, 4)
+    if t < b3 - 0.1: return _old_stop(c, T, t, d, S, P)
+    if t < b4 - 0.1:
+        c.save(); camera(c, 540, 900, 1.0 + 0.05 * (t - b3))
+        rect(c, -400, -400, W + 800, H + 800, hexc('0a1012')); glow(c, 300, 800, 800, TEAL, 0.25)
+        face(c, 'marcus', 560, 880, 2.3, T, turn=-0.35, look=(-0.7, 0), expr='worried', light=(-1, -0.3), light_col=TEAL, ambient=0.7)
+        c.restore(); cut(c, t, b3 - 0.1); return
+    cut(c, t, b4 - 0.1)
+    c.save(); camera(c, 540, 880, 1.0 + 0.12 * (t - b4) / max(0.1, d - b4))
+    rect(c, -400, -400, W + 800, H + 800, hexc('090c10')); fog(c, T, 1.2, y0=200, y1=1600)
+    glow(c, 300, 900, 700, TEAL, 0.2)
+    face(c, 'woman', 540, 860, 2.4, T, turn=0.1, look=(-0.3, 0), expr='sad', expr2='calm', ek=smooth(prog(t, b4 + 1.0, b4 + 2.5)), light=(-1, -0.3), light_col=TEAL, ambient=0.75)
+    c.restore(); rain(c, T, 0.4)
+
+def sc_dawn(c, T, t, d, S, P):
+    k = smooth(prog(t, 0, d * 0.7))
+    c.save(); camera(c, 540, 960, 1.0 + 0.08 * t / d)
+    bus_aisle(c, T, warm=k)
+    for i in range(5):
+        quad(c, [(W, 200 + i * 80), (W, 260 + i * 80), (100, 1500 + i * 60), (60, 1400 + i * 60)], hexc('ffd09a'), 0.05 * k)
+    face(c, 'marcus', 780, 1150, 1.5, T, turn=-0.6, look=(-0.9, 0.1), expr='worried', expr2='sad', ek=k, light=(1, -0.6), light_col=hexc('ffb36b'), ambient=0.6 + 0.3 * k)
+    c.restore(); ash(c, T, 0.5 * k, col=hexc('ffe2b8'))
+
+SCENES.update({'desk': sc_desk, 'keys': sc_keys, 'behind': sc_behind, 'hall': sc_hall, 'room_phone': sc_room_phone,
+               'desk_other': sc_desk_other, 'book': paper_scene, 'logbook': paper_scene, 'news': paper_scene, 'ticket': paper_scene,
+               'bus': sc_bus, 'mirror': sc_mirror, 'sign': sc_sign, 'stop': sc_stop, 'dawn': sc_dawn})
+
 CAPCOL = {'narrator': WHITE, 'daniel': AMBER, 'marcus': TEAL, 'woman': hexc('ff6b7d'), 'caller': hexc('ff6b7d'), 'other': hexc('ff6b7d')}
 CAPNAME = {'daniel': 'DANIEL', 'marcus': 'MARCUS', 'woman': 'THE WOMAN', 'caller': 'ROOM 9', 'other': '???'}
 def chunks_for(l):
