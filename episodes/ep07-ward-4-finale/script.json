@@ -1,0 +1,14 @@
+{"voices":{"narrator":["am_onyx",0.92],"priya":["af_heart",1.0],"novak":["bm_lewis",0.8]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 7  ·  WARD 4, FINALE","l1":"A new story starts tomorrow","l2":"Follow for more Night Shift"},
+ "params":{"hosp_hall":{"far":"4","run":true},"nurse_station":{"all_lights":0,"visitor_beat":3}},
+ "lines":[
+  {"scene":"hosp_hall","who":"narrator","pre":0.6,"text":"Priya ran back to the nurse station."},
+  {"scene":"nurse_station","who":"narrator","pre":0.5,"text":"Every call light on the ward was blinking now. All at once.","sfx":["beeps"]},
+  {"scene":"nurse_station","who":"priya","pre":0.4,"text":"Hello? Is anyone here?"},
+  {"scene":"monitor","who":"narrator","pre":0.6,"text":"On the security monitor, a tall figure was walking from bed to bed."},
+  {"scene":"monitor","who":"narrator","pre":0.3,"text":"Stopping beside each one. Like a nurse, doing her rounds."},
+  {"scene":"nurse_station","who":"novak","fx":"phone","pre":0.8,"text":"Nurse. It's standing by your desk now."},
+  {"scene":"nurse_station","who":"narrator","pre":0.6,"text":"Priya closed her eyes, and didn't move until sunrise."},
+  {"scene":"hosp_ext","who":"narrator","pre":0.6,"text":"She quit the next morning. But on ward four, bed seven still calls for a nurse. Every night, at four twelve."},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

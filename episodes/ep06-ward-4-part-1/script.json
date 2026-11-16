@@ -1,0 +1,13 @@
+{"voices":{"narrator":["am_onyx",0.92],"priya":["af_heart",1.0],"novak":["bm_lewis",0.8]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 6  ·  WARD 4, PART 1","l1":"Part 2 drops tomorrow","l2":"Follow so you don’t miss it"},
+ "params":{"hosp_hall":{"far":"7"},"patient_room":{"turn_beat":2}},
+ "lines":[
+  {"scene":"nurse_station","who":"narrator","pre":1.0,"text":"Four twelve A.M. Saint Agnes Hospital. Ward four."},
+  {"scene":"nurse_station","who":"narrator","pre":0.3,"text":"Nurse Priya was alone on the night shift, when a call light blinked on. Bed seven.","sfx":["beep"]},
+  {"scene":"nurse_station","who":"priya","pre":0.5,"text":"Bed seven? That's impossible. Mister Novak died last Tuesday."},
+  {"scene":"hosp_hall","who":"narrator","pre":0.6,"text":"She walked down the dark corridor to check anyway."},
+  {"scene":"patient_room","who":"narrator","pre":0.6,"text":"The bed was made. The room was empty. But the call button was still warm."},
+  {"scene":"patient_room","who":"novak","fx":"close","pre":0.9,"text":"Nurse... I can't sleep. Someone keeps standing by my bed."},
+  {"scene":"patient_room","who":"narrator","pre":0.5,"text":"The voice had come from the empty bed."},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

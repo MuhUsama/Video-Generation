@@ -1,0 +1,14 @@
+{"voices":{"narrator":["am_onyx",0.92],"leo":["am_puck",1.0],"stranger":["bm_george",0.78]},
+ "title":{"series":"NIGHT SHIFT","ep":"EPISODE 10  ·  PUMP 6, FINALE","l1":"A new story starts next week","l2":"Follow for more Night Shift"},
+ "params":{"store":{"stranger_beat":0},"gas_ext":{"pump6":true,"walk":true},
+   "news":{"kind":"poster","head":["MISSING"],"sub":"Leo Hart, 19","date":"Last seen: Highway 9 gas station, 1:16 AM"}},
+ "lines":[
+  {"scene":"store","who":"narrator","pre":0.8,"text":"Leo didn't look up. He could see the man's shoes, right beside him."},
+  {"scene":"store","who":"stranger","fx":"close","pre":0.8,"text":"Fill it up, Leo. Pump six."},
+  {"scene":"gas_ext","who":"narrator","pre":0.6,"text":"Leo's legs moved on their own. He walked outside, into the rain."},
+  {"scene":"gas_ext","who":"narrator","pre":0.3,"text":"Pump six was there now. Rusted. Its numbers spinning backwards."},
+  {"scene":"news","who":"narrator","pre":0.6,"text":"In the morning, the station was empty. The register untouched."},
+  {"scene":"news","who":"narrator","pre":0.3,"text":"And a missing poster was already taped to the window."},
+  {"scene":"gas_ext","who":"narrator","pre":0.6,"text":"So if you ever see a pump six on Highway nine, don't stop."},
+  {"scene":"title","who":"none","pre":0.6,"text":""}
+ ]}

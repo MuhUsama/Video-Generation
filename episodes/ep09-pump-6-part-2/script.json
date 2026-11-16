@@ -1,0 +1,85 @@
+{
+ "voices": {
+  "narrator": [
+   "am_onyx",
+   0.92
+  ],
+  "leo": [
+   "am_puck",
+   1.0
+  ],
+  "stranger": [
+   "bm_george",
+   0.78
+  ]
+ },
+ "title": {
+  "series": "NIGHT SHIFT",
+  "ep": "EPISODE 9  \u00b7  PUMP 6, PART 2",
+  "l1": "The finale drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "store": {
+   "hide": true
+  },
+  "cctv": {
+   "mode": "backdoor"
+  }
+ },
+ "lines": [
+  {
+   "scene": "store",
+   "who": "narrator",
+   "pre": 0.8,
+   "text": "The knocking stopped."
+  },
+  {
+   "scene": "store",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "Leo crouched behind the counter, and counted to sixty."
+  },
+  {
+   "scene": "store",
+   "who": "narrator",
+   "pre": 0.4,
+   "text": "Then the store phone rang."
+  },
+  {
+   "scene": "store",
+   "who": "leo",
+   "pre": 1.4,
+   "text": "Hello?",
+   "sfx": [
+    "ring",
+    "click"
+   ]
+  },
+  {
+   "scene": "store",
+   "who": "stranger",
+   "fx": "phone",
+   "pre": 0.7,
+   "text": "You forgot to lock the back door, Leo."
+  },
+  {
+   "scene": "cctv",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "On the camera, the back door was slowly swinging open."
+  },
+  {
+   "scene": "cctv",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "And for the first time, the man appeared on screen. Standing right behind the counter."
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

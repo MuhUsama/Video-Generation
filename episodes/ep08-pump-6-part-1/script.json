@@ -1,0 +1,96 @@
+{
+ "voices": {
+  "narrator": [
+   "am_onyx",
+   0.92
+  ],
+  "leo": [
+   "am_puck",
+   1.0
+  ],
+  "stranger": [
+   "bm_george",
+   0.78
+  ]
+ },
+ "title": {
+  "series": "NIGHT SHIFT",
+  "ep": "EPISODE 8  \u00b7  PUMP 6, PART 1",
+  "l1": "Part 2 drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "gas_ext": {
+   "pump6": false
+  },
+  "store": {
+   "knock_beat": 2
+  },
+  "cctv": {
+   "mode": "forecourt"
+  }
+ },
+ "lines": [
+  {
+   "scene": "gas_ext",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "One A.M. A gas station on Highway nine. The only light for forty miles."
+  },
+  {
+   "scene": "gas_ext",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "Leo had one rule on the night shift. Lock the door after midnight."
+  },
+  {
+   "scene": "store",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "At one sixteen, a car pulled up to pump six.",
+   "sfx": [
+    "car"
+   ]
+  },
+  {
+   "scene": "store",
+   "who": "narrator",
+   "pre": 0.4,
+   "text": "Which was strange. There is no pump six."
+  },
+  {
+   "scene": "store",
+   "who": "stranger",
+   "fx": "close",
+   "pre": 0.9,
+   "text": "I need gas. And I need to come inside.",
+   "sfx": [
+    "knock"
+   ]
+  },
+  {
+   "scene": "store",
+   "who": "leo",
+   "pre": 0.4,
+   "text": "Sorry, we're closed. You can pay at the pump."
+  },
+  {
+   "scene": "cctv",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "Leo checked the security camera. The car was there. But the driver's seat was empty."
+  },
+  {
+   "scene": "cctv",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "And the man knocking on the glass didn't show up on camera at all."
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

@@ -62,7 +62,9 @@ def scene_mask(ids, fade=0.5):
 AMB = {'exterior': 'rain_out', 'desk': 'rain_in', 'keys': 'rain_in', 'hall': 'rain_in', 'behind': 'rain_in',
        'room': 'rain_in', 'book': 'rain_in', 'room_phone': 'rain_in', 'desk_other': 'rain_in', 'logbook': 'rain_in',
        'road': 'engine_out', 'bus': 'engine_in', 'mirror': 'engine_in', 'sign': 'engine_in', 'stop': 'fog',
-       'news': 'none', 'dawn': 'engine_idle', 'ticket': 'engine_idle', 'title': 'none'}
+       'news': 'none', 'dawn': 'engine_idle', 'ticket': 'engine_idle', 'title': 'none',
+       'nurse_station': 'hum', 'hosp_hall': 'hum', 'patient_room': 'hum', 'monitor': 'hum', 'hosp_ext': 'fog',
+       'gas_ext': 'rain_out', 'store': 'rain_in_hum', 'cctv': 'rain_in_hum'}
 used = {AMB.get(s['id'], 'none') for s in scenes}
 rain = bp(rng.standard_normal(N), 600, 7000) * 0.05
 rain += hp((rng.random(N) < 0.0008) * rng.standard_normal(N), 2000) * 0.25
@@ -73,6 +75,10 @@ eng = lp(sum(np.sin(2 * np.pi * f * t + p) for f, p in [(38, 0), (76, 1), (114, 
 eng += lp(rng.standard_normal(N), 200) * 0.05
 for kind, g in (('engine_out', 1.0), ('engine_in', 0.7), ('engine_idle', 0.35)):
     if kind in used: fxb += eng * g * scene_mask(ids_for(kind))
+hum = (np.sin(2 * np.pi * 60 * t) * 0.6 + np.sin(2 * np.pi * 120 * t) * 0.4) * 0.012 * (1 + 0.3 * np.sin(2 * np.pi * 0.3 * t))
+if 'hum' in used: fxb += hum * scene_mask(ids_for('hum'))
+if 'rain_in_hum' in used:
+    m = scene_mask(ids_for('rain_in_hum')); fxb += (lp(rain, 900) * 1.1 + hum) * m
 if 'fog' in used:
     wind = bp(rng.standard_normal(N), 200, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.15 * t)) * 0.06
     fxb += wind * scene_mask(ids_for('fog'))
@@ -116,14 +122,31 @@ for l in lines:
         elif sx == 'doors': doors(at)
         elif sx == 'sting_soft': sting(l['start'] - 0.1, 0.5)
         elif sx == 'engine_start': pass
+        elif sx in ('beep', 'beeps'):
+            for i in range(3 if sx == 'beep' else 10):
+                L = int(0.18 * SR); tt = np.arange(L) / SR
+                f0 = 880 if sx == 'beep' else [880, 988, 1046, 784][i % 4]
+                b = np.sin(2 * np.pi * f0 * tt) * np.minimum(1, tt / 0.005) * np.exp(-tt * 8) * 0.12
+                place(fxb, b, at + i * (0.6 if sx == 'beep' else 0.23))
+        elif sx == 'knock':
+            for i in range(3):
+                L = int(0.12 * SR); tt = np.arange(L) / SR
+                k2 = lp(rng.standard_normal(L), 900) * np.exp(-tt * 40) * 1.4 + np.sin(2 * np.pi * 180 * tt) * np.exp(-tt * 30) * 0.4
+                place(fxb, k2, l['start'] - 0.8 + i * 0.25)
+        elif sx == 'car':
+            L = int(3.0 * SR); tt = np.arange(L) / SR
+            envc = np.minimum(1, tt / 1.5) * np.clip((3.0 - tt) / 0.8, 0, 1)
+            car = lp(sum(np.sin(2 * np.pi * f * tt) for f in (42, 84, 126)) + rng.standard_normal(L) * 0.5, 250) * envc * 0.15
+            tires = bp(rng.standard_normal(L), 800, 4000) * envc * 0.03
+            place(fxb, car + tires, at)
 # thunder in rainy episodes at the very start
 if 'rain_out' in used or 'rain_in' in used:
-    if not thunders or thunders[0] > 3: thunder(0.6, 0.8)
+    if (not thunders or thunders[0] > 3) and scenes[0]['id'] in ('exterior', 'gas_ext', 'hall', 'behind', 'desk'): thunder(0.6, 0.8)
 # heartbeat in hall / mirror / sign
 def thump(at, g):
     L = int(0.25 * SR); tt = np.arange(L) / SR; place(fxb, np.sin(2 * np.pi * 50 * tt) * np.exp(-tt * 18) * g, at)
 for s in scenes:
-    if s['id'] in ('hall', 'mirror', 'sign', 'room', 'desk_other'):
+    if s['id'] in ('hall', 'mirror', 'sign', 'room', 'desk_other', 'hosp_hall', 'patient_room', 'monitor', 'cctv'):
         hb = s['start'] + 0.4
         while hb < s['end'] - 0.2:
             k2 = (hb - s['start']) / (s['end'] - s['start'])

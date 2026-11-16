@@ -654,7 +654,7 @@ def speaking(who, T):
 def cut(c, t, at, dur=0.07):
     if at <= t < at + dur: rect(c, 0, 0, W, H, BLACK)
 def face(c, who, x, y, s, T, **kw):
-    spk = {'daniel': 'daniel', 'double': 'other', 'marcus': 'marcus', 'woman': 'woman'}[who]
+    spk = {'daniel': 'daniel', 'double': 'other', 'marcus': 'marcus', 'woman': 'woman', 'priya': 'priya', 'novak': 'novak', 'leo': 'leo', 'stranger': 'stranger'}[who]
     kw.setdefault('mouth', mouth_for(spk, T))
     CH.draw(c, who, x, y, s, T=T, **kw)
 def handset_at(c, x, y, s, ang=-0.9):
@@ -954,8 +954,385 @@ SCENES.update({'desk': sc_desk, 'keys': sc_keys, 'behind': sc_behind, 'hall': sc
                'desk_other': sc_desk_other, 'book': paper_scene, 'logbook': paper_scene, 'news': paper_scene, 'ticket': paper_scene,
                'bus': sc_bus, 'mirror': sc_mirror, 'sign': sc_sign, 'stop': sc_stop, 'dawn': sc_dawn})
 
-CAPCOL = {'narrator': WHITE, 'daniel': AMBER, 'marcus': TEAL, 'woman': hexc('ff6b7d'), 'caller': hexc('ff6b7d'), 'other': hexc('ff6b7d')}
-CAPNAME = {'daniel': 'DANIEL', 'marcus': 'MARCUS', 'woman': 'THE WOMAN', 'caller': 'ROOM 9', 'other': '???'}
+# ===================== WEEK 2 SCENES (hospital + gas station) =====================
+HGREEN = hexc('9fe0c8'); FLUO = hexc('dff7ee')
+def first_line(S):
+    t0 = S['start'] + (S['beats'][0] if S['beats'] else 0)
+    for l in LINES:
+        if abs(l['start'] - t0) < 0.01: return l
+    return None
+def fluoro_flicker(T, seed):
+    r = random.Random(int(T * 14) + seed * 1000).random()
+    return 0.35 if r < 0.08 else 1.0
+
+def call_panel(c, x, y, T, lit7, all_on, scale=1.0):
+    c.save(); c.translate(x, y); c.scale(scale, scale)
+    rrect(c, 0, 0, 260, 150, 14); src(c, hexc('1a2522')); c.fill()
+    text(c, 'WARD 4 · CALL', 130, -14, 22, HGREEN, alpha=0.8)
+    for i in range(10):
+        cx = 30 + (i % 5) * 50; cy = 45 + (i // 5) * 60
+        on = (all_on and int(T * 4 + i) % 2 == 0) or (lit7 and i == 6 and int(T * 3) % 2 == 0)
+        circ(c, cx, cy, 14, hexc('ff3344') if on else hexc('3a1418'))
+        if on: glow(c, cx, cy, 50, hexc('ff3344'), 0.5)
+        text(c, str(i + 1), cx, cy + 36, 16, hexc('9ab8b0'))
+    c.restore()
+
+def hospital_bg(c, T, light=1.0):
+    g = cairo.LinearGradient(0, 0, 0, 1300); g.add_color_stop_rgba(0, *hexc('0f1a18')); g.add_color_stop_rgba(1, *hexc('1d2e2a'))
+    c.set_source(g); c.rectangle(-400, -400, W + 800, 1700); c.fill()
+    fl = fluoro_flicker(T, 1) * light
+    rect(c, 200, 160, 680, 26, FLUO, 0.9 * fl); glow(c, 540, 175, 600, FLUO, 0.18 * fl)
+    rect(c, -400, 760, W + 800, 6, hexc('2c4a42'))  # wall rail
+    # door window at left
+    rect(c, 60, 420, 180, 300, hexc('0a1210')); rect(c, 90, 450, 120, 120, hexc('15302a'))
+
+def sc_nurse_station(c, T, t, d, S, P):
+    fl0 = first_line(S); visitor = fl0 is not None and fl0['who'] == 'novak'
+    all_on = visitor or ('all_lights' in P and t >= B(S, P['all_lights']) + 0.2)
+    lit7 = t >= B(S, 1) + 0.6 or all_on
+    if visitor:
+        b0, b1 = B(S, 0), B(S, 1)
+        c.save(); camera(c, 540, 880, 1.0 + 0.15 * t / d)
+        hospital_bg(c, T, 0.6)
+        call_panel(c, 700, 330, T, True, True, 1.0)
+        fig = smooth(prog(t, b0 + 0.6, b0 + 3.0))
+        creature(c, 760, 1060, 1.2, 0.5 + 0.5 * fig, eyes=fig * 0.8, lean=0.3 * fig)
+        closed = smooth(prog(t, b1 - 0.2, b1 + 0.4))
+        face(c, 'priya', 440, 900, 2.0, T, turn=0.0, look=(0.6 * (1 - closed), 0), expr='fear', light=(1, -0.2), light_col=hexc('ff5566') if int(T * 4) % 2 else FLUO,
+             ambient=0.65, lid_override=0.97 if closed > 0.5 else None, mouth=0.05)
+        c.restore()
+        return
+    b1, b2 = B(S, 1), B(S, 2)
+    push = smooth(prog(t, b2 - 0.2, b2 + 1.2))
+    c.save(); camera(c, 540 - 80 * push, 960 - 60 * push, 1.0 + 0.8 * push + 0.04 * t / d)
+    hospital_bg(c, T)
+    call_panel(c, 680, 380, T, lit7, all_on)
+    look = (0.2, 0.7) if not lit7 else (0.9, -0.5)
+    if t >= b2: look = (0.2, 0)
+    face(c, 'priya', 420, 900, 1.2, T, turn=0.1 + (0.35 if lit7 and t < b2 else 0), look=look, expr='neutral', expr2='worried', ek=smooth(prog(t, b1 + 0.6, b1 + 1.4)),
+         light=(0.3, -1), light_col=FLUO, ambient=0.75)
+    # counter
+    rect(c, -400, 1220, W + 800, 900, hexc('cfd8d4')); rect(c, -400, 1220, W + 800, 40, hexc('e8efec'))
+    g = cairo.LinearGradient(0, 1260, 0, 1700); g.add_color_stop_rgba(0, 0, 0, 0, 0.1); g.add_color_stop_rgba(1, 0, 0, 0, 0.6); c.set_source(g); c.rectangle(-400, 1260, W + 800, 500); c.fill()
+    rrect(c, 640, 1040, 240, 170, 10); src(c, hexc('101614')); c.fill(); rect(c, 655, 1055, 210, 140, hexc('2a6a5a'), 0.8); glow(c, 760, 1120, 160, HGREEN, 0.25)
+    rect(c, 740, 1210, 40, 14, hexc('101614'))
+    if all_on:
+        g = cairo.RadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 1200); g.add_color_stop_rgba(0, 1, 0, 0, 0); g.add_color_stop_rgba(1, 0.6, 0, 0.05, 0.4 * (int(T * 4) % 2))
+        c.set_source(g); c.paint()
+    c.restore()
+
+def sc_hosp_hall(c, T, t, d, S, P):
+    run = P.get('run'); bob = math.sin(t * (14 if run else 5)) * (12 if run else 5)
+    vx, vy = W / 2, 820 + bob
+    c.save(); camera(c, W / 2, 900, 1.0 + (0.8 if run else 0.35) * t / d, shake=0.4 if run else 0, T=T)
+    rect(c, -400, -400, W + 800, H + 800, hexc('0b1412'))
+    fw, fh = 200, 280
+    far = [(vx - fw / 2, vy - fh / 2), (vx + fw / 2, vy - fh / 2), (vx + fw / 2, vy + fh / 2), (vx - fw / 2, vy + fh / 2)]
+    quad(c, [(-300, -300), (W + 300, -300), far[1], far[0]], hexc('16221f'))
+    quad(c, [(-300, H + 300), (W + 300, H + 300), far[2], far[3]], hexc('1c2826'))
+    quad(c, [(-300, -300), far[0], far[3], (-300, H + 300)], hexc('1e302b'))
+    quad(c, [(W + 300, -300), far[1], far[2], (W + 300, H + 300)], hexc('1a2a26'))
+    # ceiling lights
+    for i in range(5):
+        f = 0.2 + i * 0.17; k = (1 - f) ** 1.3
+        y = vy - fh / 2 - (vy - fh / 2 + 300) * k; w = 60 + 600 * k
+        on = fluoro_flicker(T, i + 3)
+        rect(c, vx - w / 2, y, w, 8 + 30 * k, FLUO, 0.85 * on); glow(c, vx, y + 40 * k, 200 + 500 * k, FLUO, 0.08 * on)
+        # reflection on floor
+        yr = vy + fh / 2 + (H + 300 - vy - fh / 2) * k; rect(c, vx - w * 0.4, yr, w * 0.8, 6 + 18 * k, FLUO, 0.08 * on)
+    # doors
+    for side in (-1, 1):
+        for k, num in enumerate((4, 6) if side < 0 else (5, 8)):
+            f0 = 0.35 + k * 0.3; f1 = f0 + 0.13
+            def wp(f, yy):
+                ex = vx + side * fw / 2; x = (1 - f) * (W / 2 + side * (W / 2 + 300)) + f * ex
+                top = (1 - f) * (-300) + f * (vy - fh / 2); bot = (1 - f) * (H + 300) + f * (vy + fh / 2); return x, top + (bot - top) * yy
+            quad(c, [wp(1 - f0, 0.28), wp(1 - f1, 0.28), wp(1 - f1, 0.98), wp(1 - f0, 0.98)], hexc('2e4a43'))
+            x, y = wp(1 - (f0 + f1) / 2, 0.24); text(c, str(num), x, y, 40 * (1 - f0 * 0.6), HGREEN, alpha=0.6)
+    rect(c, vx - 50, vy - 100, 100, 200, hexc('0a1210'))
+    glow(c, vx, vy, 140, hexc('ff3344'), 0.25 * (int(T * 3) % 2))
+    text(c, P.get('far', '7'), vx, vy - 110, 34, HGREEN)
+    # gurney
+    quad(c, [(150, 1150), (420, 1120), (430, 1180), (140, 1215)], hexc('c9d4d0'), 0.5)
+    c.restore()
+    if not run:
+        CH.draw(c, 'priya', 330, 1500 + bob * 0.4, 1.5, T=T, back=True, light=(0.3, -1), light_col=FLUO, ambient=0.5)
+    g = cairo.RadialGradient(W / 2, 900, 200, W / 2, 900, 1100); g.add_color_stop_rgba(0, 0, 0, 0, 0); g.add_color_stop_rgba(1, 0, 0, 0, 0.7); c.set_source(g); c.paint()
+
+def sc_patient_room(c, T, t, d, S, P):
+    b0, b1, b2 = B(S, 0), B(S, 1), B(S, 2)
+    if t >= b2 - 0.1:  # Priya turns
+        cut(c, t, b2 - 0.1)
+        c.save(); camera(c, 540, 880, 1.0 + 0.15 * (t - b2))
+        rect(c, -400, -400, W + 800, H + 800, hexc('0c1513')); glow(c, 300, 600, 900, COLD, 0.18)
+        face(c, 'priya', 540, 860, 2.4, T, turn=-0.25, look=(-0.9, 0.1), expr='fear', expr2='shock', ek=smooth(prog(t, b2, b2 + 1.2)), light=(-1, -0.4), light_col=COLD, ambient=0.6, mouth=0.15)
+        c.restore(); return
+    push = smooth(prog(t, b1 - 0.3, b1 + 2.5))
+    c.save(); camera(c, 600 + 40 * push, 980 - 40 * push, 1.0 + 0.5 * push)
+    rect(c, -400, -400, W + 800, H + 800, hexc('0d1715'))
+    rect(c, 640, 300, 300, 400, hexc('101c30')); circ(c, 820, 400, 50, hexc('d9dfe8'), 0.8); glow(c, 820, 400, 200, COLD, 0.15)
+    rect(c, 640, 490, 300, 12, hexc('0d1715')); rect(c, 784, 300, 12, 400, hexc('0d1715'))
+    quad(c, [(640, 700), (940, 700), (900, 1300), (420, 1300)], COLD, 0.06)
+    # IV stand
+    rect(c, 320, 500, 8, 760, hexc('8a9a96')); rrect(c, 290, 520, 66, 100, 14); src(c, hexc('cfe4ff'), 0.4); c.fill()
+    # bed
+    rect(c, 380, 960, 560, 40, hexc('6a7a76'))
+    quad(c, [(380, 1000), (960, 1000), (1000, 1220), (340, 1220)], hexc('e2e8e6'))
+    quad(c, [(400, 960), (620, 960), (630, 1010), (395, 1010)], hexc('f2f6f4'))  # pillow
+    rect(c, 340, 1220, 660, 30, hexc('3a4a46'))
+    # dent + ghost face on the pillow during his line
+    gh = prog(t, b1 + 0.2, b1 + 1.0) * (1 - prog(t, b2 - 0.6, b2 - 0.1)) * (0.25 + 0.1 * math.sin(T * 7))
+    if gh > 0:
+        face(c, 'novak', 510, 950, 0.45, T, turn=0.0, look=(0.6, -0.4), expr='sad', light=(0, -1), light_col=COLD, ambient=0.9, alpha=gh, body=False)
+    # call button + red light
+    c.new_path(); c.move_to(900, 1010); c.curve_to(980, 1100, 940, 1160, 980, 1260); src(c, hexc('2a2a2a')); c.set_line_width(5); c.stroke()
+    circ(c, 900, 1010, 14, hexc('ff3344')); glow(c, 900, 1010, 70, hexc('ff3344'), 0.4 * (int(T * 3) % 2))
+    c.restore()
+    CH.draw(c, 'priya', 150, 1560, 1.4, T=T, back=True, light=(0.6, -1), light_col=COLD, ambient=0.45)
+
+def sc_monitor(c, T, t, d, S, P):
+    rect(c, 0, 0, W, H, hexc('050807'))
+    c.save(); camera(c, 540, 860, 1.0 + 0.25 * t / d)
+    sx, sy, sw, sh = 90, 420, 900, 760
+    rrect(c, sx - 30, sy - 30, sw + 60, sh + 60, 30); src(c, hexc('111414')); c.fill()
+    c.save(); c.rectangle(sx, sy, sw, sh); c.clip()
+    c.translate(sx, sy); c.scale(sw / W, sh / H * 0.9); c.translate(0, -100)
+    sc_hosp_hall(c, T, 0.0, 10, S, {'run': False, 'far': '7'}) if False else None
+    rect(c, 0, 0, W, H + 400, hexc('0c1210'))
+    vx, vy = W / 2, 900
+    quad(c, [(0, H + 400), (W, H + 400), (vx + 120, vy + 140), (vx - 120, vy + 140)], hexc('1a2421'))
+    quad(c, [(0, 0), (vx - 120, vy - 140), (vx - 120, vy + 140), (0, H + 400)], hexc('16201d'))
+    quad(c, [(W, 0), (vx + 120, vy - 140), (vx + 120, vy + 140), (W, H + 400)], hexc('141d1a'))
+    for i, (x, y, w, h) in enumerate([(60, 600, 140, 900), (260, 760, 90, 520), (W - 200, 600, 140, 900), (W - 350, 760, 90, 520)]):
+        rect(c, x, y, w, h, hexc('243430'))
+    # figure walks between doors and pauses
+    path = [(170, 1500, 2.2), (300, 1220, 1.3), (W - 300, 1220, 1.3), (W - 170, 1500, 2.2)]
+    seg = t / d * 3; i0 = min(int(seg), 2); k = smooth(clamp((seg - i0) * 1.6 - 0.3))
+    (x0, y0, s0), (x1, y1, s1) = path[i0], path[i0 + 1]
+    creature(c, x0 + (x1 - x0) * k, y0 + (y1 - y0) * k - 300, (s0 + (s1 - s0) * k) * 0.55, 0.95, eyes=0.6)
+    c.restore()
+    # CCTV look
+    c.save(); c.rectangle(sx, sy, sw, sh); c.clip()
+    c.set_operator(cairo.OPERATOR_SOFT_LIGHT); rect(c, sx, sy, sw, sh, hexc('5aff9a'), 0.35); c.set_operator(cairo.OPERATOR_OVER)
+    for y in range(sy, sy + sh, 6): rect(c, sx, y, sw, 2, BLACK, 0.25)
+    yy = sy + ((T * 300) % sh); rect(c, sx, yy, sw, 30, WHITE, 0.05)
+    text(c, 'CAM 2 · WARD 4', sx + 30, sy + 50, 30, hexc('cfffe0'), align='l', font='JetBrains Mono')
+    text(c, '04:%02d:%02d' % (13 + int(t) // 60, (27 + int(t)) % 60), sx + sw - 30, sy + 50, 30, hexc('cfffe0'), align='r', font='JetBrains Mono')
+    if int(T * 2) % 2: circ(c, sx + 40, sy + sh - 40, 10, hexc('ff3344')); text(c, 'REC', sx + 60, sy + sh - 30, 26, hexc('ff3344'), align='l', font='JetBrains Mono')
+    c.restore(); c.restore()
+
+def sc_hosp_ext(c, T, t, d, S, P):
+    k = smooth(t / d)
+    g = cairo.LinearGradient(0, 0, 0, H); g.add_color_stop_rgba(0, *mix(hexc('070b12'), hexc('2a2236'), k)); g.add_color_stop_rgba(1, *mix(hexc('121a22'), hexc('6a4a3a'), k))
+    c.set_source(g); c.paint()
+    c.save(); camera(c, 540, 900, 1.05 - 0.08 * k)
+    rect(c, 120, 500, 840, 900, hexc('1a2024'))
+    for r in range(6):
+        for col in range(5):
+            x = 170 + col * 160; y = 560 + r * 130
+            on = (r, col) == (3, 2)
+            rect(c, x, y, 100, 80, hexc('ff3344') if (on and int(T * 3) % 2) else (hexc('3a4a48') if (r + col) % 3 == 0 else hexc('0d1214')))
+            if on: glow(c, x + 50, y + 40, 160, hexc('ff3344'), 0.4 * (int(T * 3) % 2))
+    rect(c, 330, 420, 420, 70, hexc('0d1214')); text(c, 'ST. AGNES', 540, 470, 46, hexc('cfe4ff'), spacing=6)
+    rect(c, -400, 1400, W + 800, 800, hexc('0a0d10'))
+    c.restore(); fog(c, T, 1.2, y0=900, y1=1700)
+    a = prog(t, d - 2.5, d - 1.8); text(c, '4:12 AM', W / 2, 300, 80, hexc('ff3344'), alpha=a, font='JetBrains Mono')
+
+# ---------- gas station ----------
+def pump(c, x, y, s, num, rust=False, T=0):
+    c.save(); c.translate(x, y); c.scale(s, s)
+    rrect(c, -50, -220, 100, 220, 10); src(c, hexc('5a3a2a') if rust else hexc('c9302c')); c.fill()
+    rect(c, -38, -200, 76, 50, hexc('0a1a10'));
+    if rust:
+        n = (9999 - int(T * 37)) % 10000; text(c, '%04d' % n, 0, -165, 22, hexc('ff5a3a'), font='JetBrains Mono')
+        for i in range(6): circ(c, random.Random(i).uniform(-40, 40), random.Random(i + 9).uniform(-130, -10), random.Random(i).uniform(6, 14), hexc('3a2014'), 0.8)
+    else: text(c, '0.00', 0, -165, 22, GREEN, font='JetBrains Mono')
+    text(c, str(num), 0, -60, 48, WHITE)
+    rect(c, -60, 0, 120, 16, hexc('3a3a3a'))
+    c.restore()
+
+def gas_station(c, T, pump6=False, open_sign=True, car6=False, fl=0.0):
+    g = cairo.LinearGradient(0, 0, 0, H); g.add_color_stop_rgba(0, *mix(hexc('04060a'), hexc('7d8fb8'), fl)); g.add_color_stop_rgba(1, *hexc('10141c')); c.set_source(g); c.rectangle(-400, -400, W + 800, H + 800); c.fill()
+    for x, h in TREES: quad(c, [(x, 1000 - h * 1.4 - 100), (x - h * 0.3, 1010), (x + h * 0.3, 1010)], hexc('05070b'))
+    rect(c, -400, 1000, W + 800, 1300, hexc('121418'))
+    # store
+    rect(c, -200, 700, 480, 320, hexc('20242a')); rect(c, -150, 780, 280, 200, hexc('ffe9b8'), 0.85); glow(c, -10, 880, 300, hexc('ffd890'), 0.3)
+    text(c, 'OPEN' if open_sign else 'CLOSED', 40, 760, 40, hexc('ff3355') if open_sign else hexc('5a6a7a'))
+    # canopy
+    rect(c, 300, 560, 760, 70, hexc('e8e4dc')); rect(c, 300, 620, 760, 12, hexc('c9302c'))
+    for x in (380, 980): rect(c, x - 10, 630, 20, 380, hexc('a9a5a0'))
+    for i in range(4): glow(c, 400 + i * 180, 640, 200, hexc('f4f8ff'), 0.25)
+    quad(c, [(320, 640), (1040, 640), (1200, 1020), (180, 1020)], hexc('f4f8ff'), 0.08)
+    for i in range(5): pump(c, 420 + i * 120, 1010, 0.75, i + 1)
+    if pump6:
+        pump(c, 1020, 1010, 0.75, 6, rust=True, T=T); glow(c, 1020, 900, 160, hexc('ff5a3a'), 0.15)
+    if car6:
+        c.save(); c.translate(1000, 1010)
+        rrect(c, -40, -90, 260, 80, 24); src(c, hexc('1a1d22')); c.fill(); rrect(c, 10, -150, 160, 70, 20); src(c, hexc('16191d')); c.fill()
+        rect(c, 25, -140, 60, 50, hexc('2a3a40')); circ(c, 20, -10, 26, hexc('050505')); circ(c, 180, -10, 26, hexc('050505'))
+        c.restore()
+    text(c, 'HWY 9 FUEL', 680, 610, 42, hexc('c9302c'), spacing=4)
+    # road
+    rect(c, -400, 1260, W + 800, 220, hexc('0a0b0d'))
+    for i in range(8): rect(c, i * 180 - 60, 1365, 100, 8, hexc('c9b26a'), 0.5)
+    # wet reflections
+    for i in range(4): rect(c, 380 + i * 180, 1050, 40, 180, hexc('f4f8ff'), 0.04)
+
+def sc_gas_ext(c, T, t, d, S, P):
+    fl = flash(T)
+    walk = P.get('walk') and len(S['beats']) >= 2
+    end_shot = P.get('pump6') and len(S['beats']) < 2
+    z = 1.0 + 0.1 * t / d if not end_shot else 1.15 - 0.15 * smooth(t / d)
+    c.save(); camera(c, 600 if not end_shot else 760, 900, z)
+    gas_station(c, T, pump6=P.get('pump6', False) and (not walk or t > B(S, 1) - 0.3), open_sign=not P.get('pump6'), fl=fl)
+    if walk:
+        k = smooth(prog(t, 0.3, d - 0.5))
+        CH.draw(c, 'leo', 300 + 640 * k, 990 + math.sin(t * 6) * 3, 0.32, T=T, back=True, light=(0, -1), light_col=hexc('f4f8ff'), ambient=0.4)
+    c.restore()
+    rain(c, T, 1.0, fl)
+    if not P.get('pump6'):
+        a = prog(t, 0.6, 1.0) * (1 - prog(t, d - 1.2, d - 0.6)); s = '1:00 AM'; n = int(clamp((t - 0.6) / 0.8) * len(s))
+        text(c, s[:n], 90, 1420, 64, WHITE, align='l', alpha=a, font='JetBrains Mono')
+    if fl > 0: rect(c, 0, 0, W, H, WHITE, fl * 0.15)
+
+def store_bg(c, T):
+    rect(c, -400, -400, W + 800, H + 800, hexc('1a1c20'))
+    for r in range(4):
+        rect(c, -100, 380 + r * 170, 760, 14, hexc('3a3d44'))
+        for i in range(14):
+            rr = random.Random(r * 20 + i); col = rr.choice(['c9302c', 'e8c94a', '3a7ac9', '5ab36a', 'e8e4dc', 'c96a2c'])
+            rect(c, -90 + i * 52, 380 + r * 170 - rr.uniform(70, 120), 40, 120, hexc(col), 0.7)
+    # glass door at right with rain
+    rect(c, 700, 300, 380, 950, hexc('05070a')); c.save(); c.rectangle(700, 300, 380, 950); c.clip(); rain(c, T, 0.9); c.restore()
+    c.new_path(); c.rectangle(700, 300, 380, 950); src(c, hexc('8a8d94')); c.set_line_width(14); c.stroke()
+    text(c, 'CLOSED', 890, 380, 36, hexc('5a6a7a'))
+    rect(c, 0, 0, W, 60, hexc('f4f8ff'), 0.4); glow(c, 400, 60, 700, hexc('f4f8ff'), 0.12)
+
+def counter(c, T, ring_=False):
+    rect(c, -400, 1250, W + 800, 900, hexc('2a2d33')); rect(c, -400, 1250, W + 800, 22, hexc('5a5d64'))
+    rrect(c, 120, 1120, 220, 130, 10); src(c, hexc('15171b')); c.fill(); rect(c, 140, 1135, 120, 60, hexc('2a6a5a'), 0.8)
+    c.save(); c.translate(500 + (math.sin(T * 90) * 3 if ring_ else 0), 1215); rrect(c, -60, -30, 120, 40, 10); src(c, hexc('0d0e10')); c.fill(); c.restore()
+
+def sc_store(c, T, t, d, S, P):
+    rin = ringing(T)
+    if P.get('hide'):
+        b3, b4 = B(S, 3), B(S, 4)
+        push = smooth(prog(t, b4, b4 + 1.5))
+        c.save(); camera(c, 540, 1000, 1.0 + 0.4 * push, shake=0.15 * rin, T=T)
+        rect(c, -400, -400, W + 800, H + 800, hexc('0d0e11')); rect(c, -400, 300, W + 800, 30, hexc('2a2d33'))
+        rect(c, -400, 330, W + 800, 1600, hexc('17191d'))
+        for i in range(6): rect(c, -300 + i * 300, 600, 220, 14, hexc('2a2d33'))
+        up = t >= b3 - 0.2
+        if not up:
+            c.save(); c.translate(820 + (math.sin(T * 90) * 4 if rin else 0), 820); rrect(c, -90, -40, 180, 60, 14); src(c, hexc('050607')); c.fill(); c.restore()
+            if rin:
+                for k in range(3):
+                    r = ((T * 260) + k * 70) % 210; c.new_path(); c.arc(820, 790, 50 + r, PI * 1.1, PI * 1.9); src(c, hexc('ffa860'), 0.5 * (1 - r / 210)); c.set_line_width(5); c.stroke()
+        hear = smooth(prog(t, b4 + 0.3, b4 + 1.2))
+        face(c, 'leo', 470, 1000, 1.7, T, turn=0.35 - 0.7 * hear, look=(0.7, 0.1) if not up else (-0.9 * hear, 0), expr='worried', expr2='fear', ek=max(0.4, hear),
+             light=(1, -0.5), light_col=hexc('f4f8ff'), ambient=0.55)
+        if up: handset_at(c, 640, 990, 1.0, -1.3); CH.hand(c, 650, 1060, 1.1, CH.CHARS['leo']['skin'], 0.4)
+        c.restore(); return
+    if 'stranger_beat' in P:
+        b1 = B(S, 1)
+        if t < b1 - 0.1:
+            c.save(); camera(c, 540, 1000, 1.0 + 0.1 * t / b1)
+            rect(c, -400, -400, W + 800, H + 800, hexc('0d0e11')); rect(c, -400, 330, W + 800, 1600, hexc('17191d'))
+            face(c, 'leo', 420, 980, 1.7, T, turn=0.3, look=(0.8, 0.9), expr='fear', light=(1, -0.5), light_col=hexc('f4f8ff'), ambient=0.5, mouth=0.05)
+            # shoes + coat hem beside him
+            k = smooth(prog(t, 0.5, 1.5))
+            quad(c, [(760, 1250 - 600 * k), (980, 1250 - 600 * k), (1000, 1600), (740, 1600)], hexc('16130f'), k)
+            for x in (780, 900): rrect(c, x, 1580, 130, 50, 20); src(c, hexc('050505'), k); c.fill()
+            c.restore(); return
+        cut(c, t, b1 - 0.1)
+        c.save(); camera(c, 540, 820, 1.0 + 0.12 * (t - b1))
+        rect(c, -400, -400, W + 800, H + 800, hexc('0d0e11')); glow(c, 540, 300, 900, hexc('f4f8ff'), 0.12)
+        face(c, 'stranger', 540, 760, 2.6, T, turn=0.0, look=(0, 0.7), expr='sinister', light=(0, -1), light_col=hexc('f4f8ff'), ambient=0.65, eyes_glow=0.3)
+        c.restore(); return
+    # ep8: standing at the counter, stranger at the glass
+    kb = P.get('knock_beat', 99); b3 = B(S, kb + 1)
+    if t >= B(S, kb) - 0.1 and t < b3 - 0.1:
+        cut(c, t, B(S, kb) - 0.1)
+        c.save(); camera(c, 540, 860, 1.0 + 0.12 * (t - B(S, kb)))
+        rect(c, -400, -400, W + 800, H + 800, hexc('05070a')); rain(c, T, 1.0)
+        face(c, 'stranger', 540, 850, 2.3, T, turn=0.0, look=(0, 0), expr='sinister', light=(-1, -0.5), light_col=hexc('ffd890'), ambient=0.7)
+        CH.hand(c, 300, 1150, 2.2, CH.CHARS['stranger']['skin'], 0.1)
+        for y in range(0, H, 140): rect(c, 0, y, W, 3, WHITE, 0.03)
+        c.restore(); rect(c, 0, 0, W, H, hexc('8fb0ff'), 0.06); return
+    if t >= b3 - 0.1:
+        cut(c, t, b3 - 0.1)
+        c.save(); camera(c, 540, 880, 1.0 + 0.1 * (t - b3))
+        store_bg(c, T)
+        face(c, 'leo', 520, 860, 2.3, T, turn=0.3, look=(0.8, 0), expr='worried', light=(1, -0.5), light_col=hexc('f4f8ff'), ambient=0.75)
+        c.restore(); return
+    c.save(); camera(c, 540, 960, 1.0 + 0.06 * t / d)
+    store_bg(c, T)
+    seen = t >= B(S, 0) + 1.0
+    if t > B(S, 0) + 0.3:  # headlights through the glass
+        glow(c, 890, 800, 400, hexc('fff2c8'), 0.25 * prog(t, B(S, 0) + 0.3, B(S, 0) + 1.5))
+    face(c, 'leo', 380, 940, 1.2, T, turn=0.3 if seen else 0.0, look=(0.9, 0) if seen else (0, 0.6), expr='neutral', expr2='worried', ek=prog(t, B(S, 1), B(S, 1) + 1),
+         light=(0.3, -1), light_col=hexc('f4f8ff'), ambient=0.8)
+    counter(c, T)
+    if t > kb and t > B(S, kb) - 1.0:
+        glow(c, 890, 700, 160, hexc('ffffff'), 0.1)
+    c.restore()
+
+def cctv_overlay(c, T, t, cam, tint='9affc0'):
+    gray = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1, 1)
+    c.set_operator(cairo.OPERATOR_HSL_SATURATION); rect(c, 0, 0, W, H, hexc('808080')); c.set_operator(cairo.OPERATOR_OVER)
+    c.set_operator(cairo.OPERATOR_SOFT_LIGHT); rect(c, 0, 0, W, H, hexc(tint), 0.4); c.set_operator(cairo.OPERATOR_OVER)
+    for y in range(0, H, 6): rect(c, 0, y, W, 2, BLACK, 0.22)
+    yy = (T * 400) % H; rect(c, 0, yy, W, 40, WHITE, 0.05)
+    text(c, cam, 60, 200, 38, hexc('e8fff0'), align='l', font='JetBrains Mono')
+    text(c, '01:%02d:%02d' % (16 + int(t) // 60, (int(t) + 40) % 60), W - 60, 200, 38, hexc('e8fff0'), align='r', font='JetBrains Mono')
+    if int(T * 2) % 2: circ(c, 70, 1460, 12, hexc('ff3344')); text(c, 'REC', 95, 1472, 34, hexc('ff3344'), align='l', font='JetBrains Mono')
+
+def sc_cctv(c, T, t, d, S, P):
+    b1 = B(S, 1)
+    if P.get('mode') == 'backdoor':
+        c.save(); camera(c, 540, 900, 1.0 + 0.3 * smooth(prog(t, b1, d)))
+        store_bg(c, T)
+        # back door on the left swinging open
+        rect(c, 20, 500, 260, 700, hexc('05070a'))
+        k = smooth(prog(t, 0.3, 3.0)); quad(c, [(20, 500), (20 + 260 * (1 - 0.8 * k), 500 + 60 * k), (20 + 260 * (1 - 0.8 * k), 1200 - 60 * k), (20, 1200)], hexc('4a4d54'))
+        counter(c, T)
+        if t > b1 + 1.2:
+            g = 1 if random.Random(int(T * 10)).random() > 0.15 else 0
+            CH.draw(c, 'stranger', 540 + (8 if not g else 0), 920, 1.0, T=T, expr='sinister', light=(0, -1), light_col=WHITE, ambient=0.8, alpha=0.9 * g + 0.3)
+            rect(c, -400, 1250, W + 800, 900, hexc('2a2d33')); rect(c, -400, 1250, W + 800, 22, hexc('5a5d64'))
+        c.restore(); cctv_overlay(c, T, t, 'CAM 3 · STORE'); return
+    c.save(); camera(c, 760 + 120 * smooth(prog(t, b1 - 0.5, b1 + 1.0)), 900, 1.15 + 0.5 * smooth(prog(t, B(S, 0) + 1.2, B(S, 0) + 2.6)) - 0.3 * smooth(prog(t, b1 - 0.5, b1 + 1.0)))
+    gas_station(c, T, pump6=True, open_sign=False, car6=True)
+    c.restore()
+    cctv_overlay(c, T, t, 'CAM 1 · PUMPS')
+    if t > b1 + 0.3:
+        text(c, 'NO ONE AT DOOR', W / 2, 1300, 44, hexc('ff5566'), alpha=prog(t, b1 + 0.3, b1 + 0.8), font='JetBrains Mono')
+
+_old_paper2 = paper_scene
+def paper_scene(c, T, t, d, S, P):
+    if P.get('kind') != 'poster': return _old_paper2(c, T, t, d, S, P)
+    rect(c, 0, 0, W, H, hexc('0a0c10')); rain(c, T, 0.6)
+    c.save(); c.translate(W / 2, 880); c.rotate(-0.03); s = 1.0 + 0.08 * t / d; c.scale(s, s)
+    a = prog(t, 0, 0.5)
+    rect(c, -380, -520, 760, 1000, hexc('ece8dc'), a)
+    text(c, 'MISSING', 0, -400, 120, hexc('b0201c'), alpha=a, font='DejaVu Serif')
+    c.save(); c.rectangle(-220, -350, 440, 440); c.clip(); rect(c, -220, -350, 440, 440, hexc('8a8a86'))
+    CH.draw(c, 'leo', 0, -120, 1.1, T=0.5, expr='neutral', expr2='calm', ek=0.6, light=(1, -0.5), light_col=WHITE, ambient=0.95, breathe=False, alpha=a)
+    c.restore()
+    c.new_path(); c.rectangle(-220, -350, 440, 440); src(c, hexc('2a2622'), a); c.set_line_width(6); c.stroke()
+    text(c, P.get('sub', ''), 0, 170, 58, hexc('1a1612'), alpha=a, font='DejaVu Serif')
+    text(c, P.get('date', ''), 0, 240, 26, hexc('3a3430'), alpha=a, font='DejaVu Serif')
+    text(c, 'If seen, do NOT stop.', 0, 330, 34, hexc('b0201c'), alpha=prog(t, d - 2.2, d - 1.6), font='Homemade Apple')
+    for x, y in ((-380, -520), (380, -520)):
+        c.save(); c.translate(x, y); c.rotate(0.6); rect(c, -50, -14, 100, 28, hexc('e8e0b8'), 0.6 * a); c.restore()
+    c.restore()
+
+SCENES.update({'nurse_station': sc_nurse_station, 'hosp_hall': sc_hosp_hall, 'patient_room': sc_patient_room, 'monitor': sc_monitor,
+               'hosp_ext': sc_hosp_ext, 'gas_ext': sc_gas_ext, 'store': sc_store, 'cctv': sc_cctv, 'news': paper_scene,
+               'book': paper_scene, 'logbook': paper_scene, 'ticket': paper_scene})
+
+CAPCOL = {'priya': hexc('7fe0c8'), 'novak': hexc('b9cde0'), 'leo': hexc('ffa860'), 'stranger': hexc('ff6b7d'), 'narrator': WHITE, 'daniel': AMBER, 'marcus': TEAL, 'woman': hexc('ff6b7d'), 'caller': hexc('ff6b7d'), 'other': hexc('ff6b7d')}
+CAPNAME = {'priya': 'PRIYA', 'novak': 'BED 7', 'leo': 'LEO', 'stranger': 'THE STRANGER', 'daniel': 'DANIEL', 'marcus': 'MARCUS', 'woman': 'THE WOMAN', 'caller': 'ROOM 9', 'other': '???'}
 def chunks_for(l):
     words = l['text'].split(); tot = sum(len(w) + 1 for w in words); acc = 0; times = []
     for w in words: times.append(l['start'] + l['dur'] * 0.95 * acc / tot); acc += len(w) + 1
@@ -974,7 +1351,7 @@ def captions(c, T):
             if not (t0 <= T < t1): continue
             col = CAPCOL.get(l['who'], WHITE); italic = l['who'] != 'narrator'; sl = cairo.FONT_SLANT_ITALIC if italic else 0
             full = ' '.join(words[j] for j in cc); x = W / 2 - tw(c, full, 66, slant=sl) / 2; y = 1640
-            if italic: text(c, 'ROOM 9' if l.get('fx') == 'phone' else CAPNAME.get(l['who'], ''), W / 2, 1560, 30, col, spacing=6, alpha=0.85)
+            if italic: text(c, 'ROOM 9' if l.get('fx') == 'phone' and l['who'] not in ('priya', 'novak', 'leo', 'stranger') else CAPNAME.get(l['who'], ''), W / 2, 1560, 30, col, spacing=6, alpha=0.85)
             for j in cc:
                 if times[j] > T: break
                 x += text(c, words[j] + ' ', x, y, 66, col, align='l', alpha=prog(T, times[j], times[j] + 0.08), outline=12, slant=sl)
