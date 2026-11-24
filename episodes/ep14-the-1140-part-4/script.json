@@ -1,0 +1,115 @@
+{
+ "mood": "romance",
+ "voices": {
+  "narrator": [
+   "bf_emma",
+   0.92
+  ],
+  "zara": [
+   "af_bella",
+   0.95
+  ],
+  "adam": [
+   "am_liam",
+   0.95
+  ],
+  "guard": [
+   "am_eric",
+   1.0
+  ]
+ },
+ "title": {
+  "series": "THE 11:40",
+  "style": "romance",
+  "ep": "EPISODE 14  \u00b7  PART 4",
+  "l1": "The finale drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "platform": {
+   "clock": "11:41",
+   "zara": false,
+   "missed": true
+  },
+  "carriage": {
+   "adam": "empty",
+   "drawing": true
+  },
+  "notebook": {
+   "pages": "invite"
+  },
+  "closeup#z": {
+   "who": "zara",
+   "expr": "calm",
+   "bg": "train",
+   "amb": "train",
+   "smile": true
+  },
+  "platform#storm": {
+   "clock": "SAT",
+   "storm": true,
+   "closed": true,
+   "zara": false
+  },
+  "closeup#z2": {
+   "who": "zara",
+   "expr": "calm",
+   "bg": "street",
+   "amb": "rain_out",
+   "umbrella": true
+  }
+ },
+ "lines": [
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "For a whole week, they kept missing each other. By minutes."
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "Then one night, Zara found a drawing taped to her window seat."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "Platform four. Midnight. Saturday."
+  },
+  {
+   "scene": "closeup#z",
+   "who": "zara",
+   "pre": 0.5,
+   "text": "Saturday. Okay. Saturday."
+  },
+  {
+   "scene": "platform#storm",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "But on Saturday, the worst storm in years hit the city.",
+   "sfx": [
+    "thunder"
+   ]
+  },
+  {
+   "scene": "platform#storm",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "Every train was cancelled. The station was closed."
+  },
+  {
+   "scene": "closeup#z2",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "She went anyway."
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

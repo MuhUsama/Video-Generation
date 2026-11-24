@@ -1,0 +1,116 @@
+{
+ "mood": "romance",
+ "voices": {
+  "narrator": [
+   "bf_emma",
+   0.92
+  ],
+  "zara": [
+   "af_bella",
+   0.95
+  ],
+  "adam": [
+   "am_liam",
+   0.95
+  ],
+  "guard": [
+   "am_eric",
+   1.0
+  ]
+ },
+ "title": {
+  "series": "THE 11:40",
+  "style": "romance",
+  "ep": "EPISODE 13  \u00b7  PART 3",
+  "l1": "Part 4 drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "street": {
+   "guard": true,
+   "handover": true,
+   "day": false
+  },
+  "notebook": {
+   "pages": "hello",
+   "smudge": 2
+  },
+  "closeup#a1": {
+   "who": "adam",
+   "expr": "shock",
+   "expr2": "calm",
+   "bg": "booth_day",
+   "amb": "rain_in"
+  },
+  "carriage": {
+   "adam": "awake",
+   "zara_seat": "empty"
+  },
+  "closeup#a2": {
+   "who": "adam",
+   "expr": "sad",
+   "bg": "train",
+   "amb": "train"
+  }
+ },
+ "lines": [
+  {
+   "scene": "street",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "Zara left the notebook with the guard. With one new page."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "Hello. From the girl on the eleven forty. And her number."
+  },
+  {
+   "scene": "closeup#a1",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "The next morning, Adam read it three times."
+  },
+  {
+   "scene": "closeup#a1",
+   "who": "adam",
+   "pre": 0.3,
+   "text": "She saw it. She actually saw it."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "But the rain had soaked the page. The last two numbers were gone."
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "So that night, Adam rode the eleven forty again.",
+   "sfx": [
+    "doors"
+   ]
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "But Zara wasn't there. She had gone to Elm Street, to find him on the day shift."
+  },
+  {
+   "scene": "closeup#a2",
+   "who": "adam",
+   "pre": 0.6,
+   "text": "Where are you?",
+   "fx": "close"
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

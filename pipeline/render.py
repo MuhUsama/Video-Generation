@@ -1,5 +1,5 @@
 """Night Shift renderer. Usage: python3 render.py <episode_dir> [stills t1 t2 ...]"""
-import cairo, json, math, random, subprocess, sys
+import cairo, json, math, os, random, subprocess, sys
 import numpy as np
 
 EP = sys.argv[1].rstrip('/') + '/'
@@ -1331,7 +1331,10 @@ SCENES.update({'nurse_station': sc_nurse_station, 'hosp_hall': sc_hosp_hall, 'pa
                'hosp_ext': sc_hosp_ext, 'gas_ext': sc_gas_ext, 'store': sc_store, 'cctv': sc_cctv, 'news': paper_scene,
                'book': paper_scene, 'logbook': paper_scene, 'ticket': paper_scene})
 
+exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scenes_romance.py')).read())
+
 CAPCOL = {'priya': hexc('7fe0c8'), 'novak': hexc('b9cde0'), 'leo': hexc('ffa860'), 'stranger': hexc('ff6b7d'), 'narrator': WHITE, 'daniel': AMBER, 'marcus': TEAL, 'woman': hexc('ff6b7d'), 'caller': hexc('ff6b7d'), 'other': hexc('ff6b7d')}
+CAPCOL.update({'zara': hexc('ffb0c0'), 'adam': hexc('9fd0ff'), 'guard': hexc('ffd08a')})
 CAPNAME = {'priya': 'PRIYA', 'novak': 'BED 7', 'leo': 'LEO', 'stranger': 'THE STRANGER', 'daniel': 'DANIEL', 'marcus': 'MARCUS', 'woman': 'THE WOMAN', 'caller': 'ROOM 9', 'other': '???'}
 def chunks_for(l):
     words = l['text'].split(); tot = sum(len(w) + 1 for w in words); acc = 0; times = []
@@ -1342,6 +1345,7 @@ def chunks_for(l):
         cur.append(i)
         if w[-1] in '.?!' or i == len(words) - 1: ch.append(cur); cur = []
     return words, times, ch
+CAPNAME.update({'zara': 'ZARA', 'adam': 'ADAM', 'guard': 'GUARD'})
 CAPS = [(l, *chunks_for(l)) for l in LINES if l['text']]
 def captions(c, T):
     for l, words, times, ch in CAPS:
@@ -1373,7 +1377,7 @@ def frame(T, caps=True):
             P = PARAMS.get(sid, {})
             c.save()
             if CINEMA: CIN.camera(c, T, s, t, d)
-            SCENES[sid](c, T, t, d, s, P); c.restore()
+            SCENES[sid.split('#')[0]](c, T, t, d, s, P); c.restore()
             k = min(prog(t, 0, 0.35) if s['start'] > 0 else prog(t, 0, 0.8), 1 - prog(t, d - 0.25, d))
             if sid == 'title': k = 1
             if CINEMA and sid != 'title': CIN.foreground(c, T, sid)
@@ -1381,7 +1385,7 @@ def frame(T, caps=True):
     if CINEMA:
         surf.flush()
         arr = np.ndarray((H, W, 4), np.uint8, surf.get_data())
-        CIN.grade(arr, T, sid or 'title', flash=flash(T) if sid in ('exterior', 'road', 'gas_ext', 'hosp_ext', 'behind') else 0.0, is_cut=is_cut)
+        CIN.grade(arr, T, sid or 'title', flash=flash(T) if (sid or '').split('#')[0] in ('platform', 'street', 'exterior', 'road', 'gas_ext', 'hosp_ext', 'behind') else 0.0, is_cut=is_cut)
         surf.mark_dirty()
     else:
         post(c, T)
@@ -1390,6 +1394,14 @@ def frame(T, caps=True):
     return surf
 
 if __name__ == '__main__':
+    if sys.argv[2:3] == ['thumb']:  # python3 render.py <ep> thumb <time> "<hook line>"
+        T0 = float(sys.argv[3]); surf = frame(T0, caps=False); c = cairo.Context(surf)
+        g = cairo.LinearGradient(0, 1150, 0, H); g.add_color_stop_rgba(0, 0, 0, 0, 0); g.add_color_stop_rgba(1, 0, 0, 0, 0.85); c.set_source(g); c.paint()
+        TT = TM['title']; rom = TT.get('style') == 'romance'
+        text(c, TT['series'], W / 2, 1480, 150, hexc('ffcf8a') if rom else NEON, font='Playfair Display' if rom else FONT, outline=16)
+        text(c, sys.argv[4] if len(sys.argv) > 4 else TT['ep'], W / 2, 1600, 64, WHITE, outline=12)
+        text(c, TT['ep'], W / 2, 1690, 38, hexc('e8d8d0'), spacing=3, outline=8)
+        surf.write_to_png(EP + 'thumbnail.png'); sys.exit()
     if sys.argv[2:3] == ['stills']:
         for T in [float(x) for x in sys.argv[3:]]: frame(T).write_to_png(EP + f'still_{T:05.1f}.png')
         sys.exit()
@@ -1412,7 +1424,7 @@ if __name__ == '__main__':
             procs.append(subprocess.Popen([sys.executable] + sys.argv[:2], env={**os.environ, 'NS_CHUNK': f'{a}:{min(n, a + step)}'}))
         for p_ in procs: p_.wait()
         segs = [EP + f'seg_{a:06d}.mp4' for a in range(0, n, step)]
-        open(EP + 'segs.txt', 'w').write(''.join(f"file '{x}'\n" for x in segs))
+        open(EP + 'segs.txt', 'w').write(''.join(f"file '{os.path.abspath(x)}'\n" for x in segs))
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', EP + 'segs.txt', '-i', EP + 'mix.wav'] + enc, check=True)
         for x in segs: os.remove(x)
         os.remove(EP + 'segs.txt'); print('done', EP); sys.exit()

@@ -27,6 +27,8 @@ LOOKS = {
     'teal_night': dict(shadow=(0.060, 0.030, -0.010), high=(-0.020, 0.020, 0.030), sat=1.12, con=1.26, exp=1.00, bloom=(0.50, 0.75), hal=0.25),
     'paper':      dict(shadow=(0.010, 0.010, 0.020), high=(-0.020, 0.005, 0.020), sat=1.00, con=1.22, exp=0.95, bloom=(0.70, 0.35), hal=0.10),
     'cctv':       dict(shadow=(0.000, 0.015, 0.000), high=(0.000, 0.000, 0.000), sat=1.00, con=1.19, exp=0.95, bloom=(0.60, 0.40), hal=0.00),
+    'romance_night': dict(shadow=(0.050, 0.010, 0.020), high=(-0.030, 0.015, 0.050), sat=1.20, con=1.22, exp=1.04, bloom=(0.48, 0.95), hal=0.35),
+    'golden':     dict(shadow=(0.030, 0.010, 0.020), high=(-0.050, 0.020, 0.060), sat=1.15, con=1.18, exp=1.02, bloom=(0.50, 0.90), hal=0.35),
     'title':      dict(shadow=(0.030, 0.010, 0.000), high=(0.000, 0.000, 0.020), sat=1.05, con=1.22, exp=0.90, bloom=(0.45, 0.90), hal=0.30),
 }
 SCENE_LOOK = {
@@ -40,10 +42,12 @@ SCENE_LOOK = {
     # gas station
     'gas_ext': 'sodium', 'store': 'sodium', 'cctv': 'cctv',
     # inserts
+    'platform': 'romance_night', 'carriage': 'romance_night', 'notebook': 'paper', 'street': 'romance_night',
+    'closeup': 'romance_night', 'sunrise': 'golden',
     'news': 'paper', 'book': 'paper', 'logbook': 'paper', 'ticket': 'paper', 'title': 'title',
 }
-RAINY = {'exterior', 'road', 'gas_ext', 'hosp_ext', 'stop', 'sign'}
-INTERIOR_DUST = {'desk', 'keys', 'room', 'room_phone', 'desk_other', 'store', 'nurse_station', 'patient_room', 'hall', 'hosp_hall', 'bus', 'mirror'}
+RAINY = {'platform', 'street', 'exterior', 'road', 'gas_ext', 'hosp_ext', 'stop', 'sign'}
+INTERIOR_DUST = {'carriage', 'notebook', 'desk', 'keys', 'room', 'room_phone', 'desk_other', 'store', 'nurse_station', 'patient_room', 'hall', 'hosp_hall', 'bus', 'mirror'}
 NO_CAMERA = {'title'}
 
 # camera moves, cycled through scenes so consecutive shots never repeat
@@ -101,7 +105,7 @@ class Cinema:
     def camera(self, c, T, scene, t, d):
         """Apply the virtual camera to cairo context c before the scene draws."""
         W, H = self.W, self.H
-        sid = scene['id']
+        sid = scene['id'].split('#')[0]
         if sid in NO_CAMERA:
             self.cam_off = (0.0, 0.0); return
         i = self.scene_index.get(id(scene), 0)
@@ -135,6 +139,7 @@ class Cinema:
     def foreground(self, c, T, sid):
         """Out-of-focus particles in front of the scene, moving with stronger parallax."""
         import cairo
+        sid = sid.split('#')[0]
         if sid in NO_CAMERA or sid == 'cctv': return
         W, H = self.W, self.H
         px, py = self.cam_off[0] * 1.8, self.cam_off[1] * 1.8
@@ -185,7 +190,7 @@ class Cinema:
 
     def grade(self, arr, T, sid, flash=0.0, is_cut=False):
         """arr: HxWx4 uint8 BGRA view of the cairo surface; graded in place."""
-        L = LOOKS[SCENE_LOOK.get(sid, 'noir_amber')]
+        L = LOOKS[SCENE_LOOK.get(sid.split('#')[0], 'noir_amber')]
         W, H = self.W, self.H
         f = arr[:, :, :3].astype(np.float32) * (1 / 255.0)
         # shutter: blend a little of the last frame for motion smoothness (never across cuts)

@@ -34,7 +34,8 @@ def lp(x, f, o=2): return signal.sosfilt(signal.butter(o, f, 'low', fs=SR, outpu
 def hp(x, f, o=2): return signal.sosfilt(signal.butter(o, f, 'high', fs=SR, output='sos'), x)
 def bp(x, a, b, o=4): return signal.sosfilt(signal.butter(o, [a, b], 'band', fs=SR, output='sos'), x)
 def place(buf, x, at, g=1.0):
-    s = int(max(at, 0) * SR); e = min(len(buf), s + len(x)); buf[s:e] += x[:e - s] * g
+    s = int(max(at, 0) * SR); e = min(len(buf), s + len(x))
+    if e > s: buf[s:e] += x[:e - s] * g
 def reverb(x, secs=1.6, wet=0.35):
     n = int(secs * SR); ir = rng.standard_normal(n) * np.exp(-np.arange(n) / SR * 4.5)
     ir = lp(ir, 3500); y = signal.fftconvolve(x, ir)
@@ -65,10 +66,13 @@ AMB = {'exterior': 'rain_out', 'desk': 'rain_in', 'keys': 'rain_in', 'hall': 'ra
        'news': 'none', 'dawn': 'engine_idle', 'ticket': 'engine_idle', 'title': 'none',
        'nurse_station': 'hum', 'hosp_hall': 'hum', 'patient_room': 'hum', 'monitor': 'hum', 'hosp_ext': 'fog',
        'gas_ext': 'rain_out', 'store': 'rain_in_hum', 'cctv': 'rain_in_hum'}
-used = {AMB.get(s['id'], 'none') for s in scenes}
+AMB.update({'platform': 'rain_out', 'carriage': 'train', 'notebook': 'train_soft', 'street': 'rain_out', 'sunrise': 'dawn', 'closeup': 'train'})
+MOOD = S.get('mood', 'thriller'); PRM = S.get('params', {})
+def amb_of(sid): return PRM.get(sid, {}).get('amb') or AMB.get(sid.split('#')[0], 'none')
+used = {amb_of(s['id']) for s in scenes}
 rain = bp(rng.standard_normal(N), 600, 7000) * 0.05
 rain += hp((rng.random(N) < 0.0008) * rng.standard_normal(N), 2000) * 0.25
-def ids_for(kind): return [s['id'] for s in scenes if AMB.get(s['id']) == kind]
+def ids_for(kind): return [s['id'] for s in scenes if amb_of(s['id']) == kind]
 if 'rain_out' in used: fxb += rain * scene_mask(ids_for('rain_out'))
 if 'rain_in' in used: fxb += lp(rain, 900) * 1.1 * scene_mask(ids_for('rain_in'))
 eng = lp(sum(np.sin(2 * np.pi * f * t + p) for f, p in [(38, 0), (76, 1), (114, 2)]) * (1 + 0.3 * np.sin(2 * np.pi * 7 * t)), 300) * 0.06
@@ -82,8 +86,47 @@ if 'rain_in_hum' in used:
 if 'fog' in used:
     wind = bp(rng.standard_normal(N), 200, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.15 * t)) * 0.06
     fxb += wind * scene_mask(ids_for('fog'))
+if 'train' in used or 'train_soft' in used:
+    # carriage: low rumble, wheel clacks over rail joints, a little sway
+    rum = lp(rng.standard_normal(N), 140) * 0.10 + lp(rng.standard_normal(N), 700) * 0.015
+    clk = np.zeros(N); per = 1.15
+    for k0 in np.arange(0.2, TOTAL, per):
+        for off in (0.0, 0.11):
+            L0 = int(0.09 * SR); tt0 = np.arange(L0) / SR
+            place(clk, lp(rng.standard_normal(L0), 1200) * np.exp(-tt0 * 45) * 0.35, k0 + off)
+    tr = rum * (1 + 0.2 * np.sin(2 * np.pi * 0.4 * t)) + clk
+    fxb += tr * scene_mask(ids_for('train')) + lp(tr, 400) * 0.5 * scene_mask(ids_for('train_soft'))
+if 'dawn' in used:
+    breeze = bp(rng.standard_normal(N), 300, 1500) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.1 * t)) * 0.03
+    for k0 in np.arange(0.5, TOTAL, 1.7):  # a few distant birds
+        L0 = int(0.25 * SR); tt0 = np.arange(L0) / SR; f0 = 2800 + 900 * rng.random()
+        chirp = np.sin(2 * np.pi * (f0 + 1500 * tt0) * tt0) * np.exp(-tt0 * 14) * 0.02
+        place(breeze, chirp, k0 + rng.random() * 0.6)
+    fxb += breeze * scene_mask(ids_for('dawn'))
+music = np.zeros(N)
+if MOOD == 'romance':
+    # soft piano: I-V-vi-IV in D major, arpeggiated, with a warm pad underneath
+    def piano(f, dur, g):
+        L0 = int(dur * SR); tt0 = np.arange(L0) / SR
+        x = sum(np.sin(2 * np.pi * f * h * tt0) * a * np.exp(-tt0 * (1.6 + h * 0.9)) for h, a in ((1, 1), (2, 0.45), (3, 0.2), (4, 0.08)))
+        return x * np.minimum(1, tt0 / 0.004) * g
+    def hz(m): return 440 * 2 ** ((m - 69) / 12)
+    chords = [(50, [62, 66, 69, 74]), (45, [61, 64, 69, 73]), (47, [62, 66, 71, 74]), (43, [62, 67, 71, 74])]
+    bar = 2.6; k0 = 0.3; i = 0
+    while k0 < TOTAL:
+        root, notes = chords[i % 4]
+        place(music, piano(hz(root - 12), 3.5, 0.10), k0); place(music, piano(hz(root), 3.0, 0.07), k0)
+        for j, m in enumerate(notes + [notes[2]]):
+            place(music, piano(hz(m), 2.2, 0.06 if j else 0.075), k0 + j * bar / 5)
+        if i % 2 == 1:  # gentle melody note on top
+            place(music, piano(hz(notes[-1] + 12 - (i % 3)), 2.5, 0.045), k0 + bar * 0.55)
+        pad = sum(np.sin(2 * np.pi * hz(m - 12) * (t[:int(bar * SR)]) + j) for j, m in enumerate(notes[:3]))
+        place(music, lp(pad, 900) * np.sin(np.pi * np.arange(len(pad)) / len(pad)) * 0.02, k0)
+        k0 += bar; i += 1
+    music = reverb(music, 2.4, 0.4)[:N]
+    music *= np.clip(t / 1.0, 0, 1) * np.clip((TOTAL - t) / 2.0, 0, 1)
 drone = sum(np.sin(2 * np.pi * f * t + p) for f, p in [(55, 0), (55.4, 1), (82.4, 2), (110.7, 0.5)])
-fxb += lp(drone, 400) * (0.02 + 0.05 * (t / TOTAL) ** 2)
+if MOOD != 'romance': fxb += lp(drone, 400) * (0.02 + 0.05 * (t / TOTAL) ** 2)
 
 thunders = []
 def thunder(at, g=1.0):
@@ -145,17 +188,21 @@ if 'rain_out' in used or 'rain_in' in used:
 # heartbeat in hall / mirror / sign
 def thump(at, g):
     L = int(0.25 * SR); tt = np.arange(L) / SR; place(fxb, np.sin(2 * np.pi * 50 * tt) * np.exp(-tt * 18) * g, at)
-for s in scenes:
+for s in (scenes if MOOD != 'romance' else []):
     if s['id'] in ('hall', 'mirror', 'sign', 'room', 'desk_other', 'hosp_hall', 'patient_room', 'monitor', 'cctv'):
         hb = s['start'] + 0.4
         while hb < s['end'] - 0.2:
             k2 = (hb - s['start']) / (s['end'] - s['start'])
             thump(hb, 0.3 + 0.2 * k2); thump(hb + 0.22, 0.2 + 0.15 * k2); hb += 60 / (70 + 40 * k2)
 title = next(s for s in scenes if s['id'] == 'title')
-sting(title['start'] - 0.05)
+if MOOD == 'romance':
+    for j, m in enumerate((74, 78, 81, 86)):  # soft chime instead of a horror sting
+        L0 = int(3 * SR); tt0 = np.arange(L0) / SR
+        place(fxb, np.sin(2 * np.pi * 440 * 2 ** ((m - 69) / 12) * tt0) * np.exp(-tt0 * 1.5) * 0.05, title['start'] + j * 0.12)
+else: sting(title['start'] - 0.05)
 fxb *= np.clip((TOTAL - t) / 1.5, 0, 1) * np.clip(t / 0.4, 0, 1)
 venv = np.convolve(np.abs(vox), np.ones(2400) / 2400, 'same')
-mix = vox + fxb * (1 - 0.4 * np.clip(venv / 0.04, 0, 1))
+mix = vox + (fxb + music) * (1 - 0.45 * np.clip(venv / 0.04, 0, 1))
 mix = mix / np.abs(mix).max() * 0.9
 sf.write(EP + 'mix.wav', mix.astype(np.float32), SR)
 # lip-sync envelope at 30 fps per line

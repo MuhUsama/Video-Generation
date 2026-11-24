@@ -1,0 +1,120 @@
+{
+ "mood": "romance",
+ "voices": {
+  "narrator": [
+   "bf_emma",
+   0.92
+  ],
+  "zara": [
+   "af_bella",
+   0.95
+  ],
+  "adam": [
+   "am_liam",
+   0.95
+  ],
+  "guard": [
+   "am_eric",
+   1.0
+  ]
+ },
+ "title": {
+  "series": "THE 11:40",
+  "style": "romance",
+  "ep": "EPISODE 12  \u00b7  PART 2",
+  "l1": "Part 3 drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "platform": {
+   "clock": "11:32",
+   "zara": true,
+   "notebook": true
+  },
+  "carriage": {
+   "adam": "empty"
+  },
+  "closeup#z1": {
+   "who": "zara",
+   "expr": "sad",
+   "bg": "train",
+   "amb": "train"
+  },
+  "notebook": {
+   "pages": "cover"
+  },
+  "street": {
+   "guard": true
+  },
+  "closeup#g": {
+   "who": "guard",
+   "bg": "booth",
+   "amb": "rain_in"
+  },
+  "closeup#z2": {
+   "who": "zara",
+   "expr": "calm",
+   "bg": "street",
+   "amb": "rain_out"
+  }
+ },
+ "lines": [
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "The next night, Zara got to the platform early. His notebook in her hands."
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "Eleven forty. The train came. His seat stayed empty.",
+   "sfx": [
+    "doors"
+   ]
+  },
+  {
+   "scene": "closeup#z1",
+   "who": "zara",
+   "pre": 0.5,
+   "text": "Come on. You said tomorrow."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "Inside the cover, a name. Adam. Elm Street Tower. Night security."
+  },
+  {
+   "scene": "street",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "So she got off at Elm Street. In the rain."
+  },
+  {
+   "scene": "closeup#g",
+   "who": "guard",
+   "pre": 0.4,
+   "text": "Adam? He switched to the day shift. Starts tomorrow morning."
+  },
+  {
+   "scene": "closeup#z2",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "The day shift. He would never ride the eleven forty again."
+  },
+  {
+   "scene": "closeup#z2",
+   "who": "zara",
+   "pre": 0.4,
+   "text": "Then I'll leave him a hello of my own."
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

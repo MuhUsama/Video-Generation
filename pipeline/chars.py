@@ -19,6 +19,8 @@ CHARS = {
     'novak': dict(skin='d9c3b0', hair='e6e2dc', hairstyle='bald', shirt='b9c7d6', jacket='a9b8c9', iris='6b7f8f', brow='cfcac2', outfit='gown', pale=True),
     'leo': dict(skin='e0b090', hair='6b4a2a', hairstyle='short', shirt='2a2a2a', jacket='9b2a2a', iris='3b5a7a', brow='4a3018', outfit='hoodie'),
     'stranger': dict(skin='b8b4ac', hair='111111', hairstyle='fedora', shirt='d8d4cc', jacket='2a2622', iris='0a0a0a', brow='111111', outfit='coat', pale=True),
+    'zara': dict(skin='c48a64', hair='3a1c14', hairstyle='shoulder', shirt='e9c46a', jacket='8c3b4a', iris='4a2c1a', brow='22140f', outfit='scarf', lashes=True, lips='b5525e'),
+    'adam': dict(skin='d7a47e', hair='3a2618', hairstyle='short', shirt='dfe6ee', jacket='2f3b4c', iris='4a6a3a', brow='2a1a10', tag=True),
     'woman': dict(skin='d8d2c8', hair='0d0d10', hairstyle='long', shirt='6b6f72', jacket='4a4f55', iris='9fb8c0', brow='1a1a1e', pale=True, wet=True),
 }
 
@@ -104,6 +106,11 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
             for sx in (-28, 28):
                 c.new_path(); c.move_to(sx, 160); c.line_to(sx + (4 if sx > 0 else -4), 280); src(c, hexc('e8e2d8'), 0.8); c.set_line_width(6); c.stroke()
             c.new_path(); c.rectangle(-120, 420, 240, 110); inkfill(c, mix(jacket_l, hexc('000000'), 0.15), 5)
+        elif not back and outfit == 'scarf':
+            c.new_path(); c.move_to(-40, 124); c.line_to(0, 210); c.line_to(40, 124); c.close_path(); src(c, mix(skin_l, hexc('000000'), 0.2)); c.fill()
+            sc_ = lit(shirt)
+            c.new_path(); c.move_to(-95, 120); c.curve_to(-60, 175, 60, 175, 95, 120); c.curve_to(110, 160, 60, 215, 0, 215); c.curve_to(-60, 215, -110, 160, -95, 120); c.close_path(); inkfill(c, sc_, 5)
+            c.new_path(); c.move_to(30, 190); c.line_to(70, 380); c.line_to(20, 385); c.line_to(5, 200); c.close_path(); inkfill(c, mix(sc_, hexc('000000'), 0.12), 5)
         elif not back and outfit == 'coat':
             c.new_path(); c.move_to(-30, 124); c.line_to(0, 300); c.line_to(30, 124); c.close_path(); src(c, shirt_l); c.fill()
             c.new_path(); c.move_to(-14, 150); c.line_to(0, 300); c.line_to(14, 150); c.close_path(); src(c, hexc('5a0d12')); c.fill()
@@ -124,6 +131,9 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
     # long hair back layer
     if C['hairstyle'] == 'bun':
         c.new_path(); c.arc(tx * 0.1, -120, 42, 0, 2 * PI); inkfill(c, hair_l, 5)
+    if C['hairstyle'] == 'shoulder':
+        c.new_path(); c.move_to(-98, -40); c.curve_to(-125, 40, -118, 120, -132, 165); c.curve_to(-90, 182, -60, 150, -40, 140)
+        c.line_to(40, 140); c.curve_to(60, 150, 90, 182, 132, 165); c.curve_to(118, 120, 125, 40, 98, -40); c.close_path(); inkfill(c, hair_l, 5)
     if C['hairstyle'] == 'long':
         c.new_path(); c.move_to(-95, -40); c.curve_to(-130, 80, -120, 220, -150, 300)
         c.line_to(150, 300); c.curve_to(120, 220, 130, 80, 95, -40); c.close_path(); inkfill(c, hair_l, 5)
@@ -191,6 +201,11 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
             lty = ey - ry + 2 * ry * lid
             c.new_path(); c.save(); c.translate(ex, lty); c.scale(rx / 17, 0.5)
             c.arc(0, 8, 17, PI * 1.12, PI * 1.88); c.restore(); src(c, hexc('1a120c'), 0.85); c.set_line_width(3); c.stroke()
+            if C.get('lashes'):
+                for kk in range(3):
+                    ox_ = ex + side * (rx * 0.75 + kk * 4); oy_ = lty - 2 + kk * 3
+                    c.new_path(); c.move_to(ox_ - side * 6, oy_ + 2); c.line_to(ox_ + side * 6, oy_ - 6 + kk * 2)
+                    src(c, hexc('120a08')); c.set_line_width(3.2); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
             if eyes_glow > 0:
                 g = cairo.RadialGradient(px, py, 0, px, py, 30); g.add_color_stop_rgba(0, 0.9, 0.95, 1, 0.6 * eyes_glow); g.add_color_stop_rgba(1, 0.9, 0.95, 1, 0)
                 c.set_source(g); c.paint()
@@ -223,7 +238,7 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
             c.restore()
         else:
             c.new_path(); c.move_to(mx - mw, my - curve * 7); c.curve_to(mx - mw * 0.4, my + curve * 5, mx + mw * 0.4, my + curve * 5, mx + mw, my - curve * 7)
-            src(c, hexc('3a1a14')); c.set_line_width(4); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
+            src(c, hexc(C.get('lips', '3a1a14'))); c.set_line_width(5 if C.get('lips') else 4); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
         # form: occlusion under the hairline and jaw, soft sheen on the lit cheek/forehead
         lx, ly = light
         g = cairo.LinearGradient(0, -112, 0, -40); g.add_color_stop_rgba(0, 0, 0, 0, 0.28); g.add_color_stop_rgba(1, 0, 0, 0, 0)
@@ -311,13 +326,20 @@ def _hair_front(c, C, hair_l, tx, T):
         c.new_path(); c.rectangle(-90 + tx * 0.2, -40, 12, 40); src(c, hexc('8a8a8a')); c.fill()
         c.new_path(); c.rectangle(78 + tx * 0.2, -40, 12, 40); src(c, hexc('8a8a8a')); c.fill()
         _cap(c, tx)
+    elif hs == 'shoulder':
+        # side-swept fringe with a soft highlight
+        c.new_path(); c.move_to(-96, 30); c.curve_to(-112, -100, -40, -138, 10 + tx, -128)
+        c.curve_to(80, -132, 112, -90, 97, 20); c.curve_to(92, -30, 78, -62, 50 + tx, -72)
+        c.curve_to(10 + tx, -50, -40 + tx, -40, -70 + tx * 0.5, -10); c.curve_to(-80, 0, -90, 15, -96, 30); c.close_path()
+        inkfill(c, hair_l, 5)
+        c.new_path(); c.move_to(-50 + tx * 0.3, -108); c.curve_to(-10, -122, 30, -120, 60, -104); src(c, hexc('ffffff'), 0.18); c.set_line_width(7); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
     elif hs == 'long':
         c.new_path(); c.move_to(-95, 40); c.curve_to(-110, -100, -40, -135, 5 + tx, -125)
         c.curve_to(70, -130, 110, -90, 96, 40); c.curve_to(90, -20, 70, -70, 30 + tx, -85)
         c.curve_to(20 + tx, -40, -10 + tx, -70, -40 + tx, -85); c.curve_to(-70, -70, -88, -20, -95, 40); c.close_path()
         inkfill(c, hair_l, 5)
         # wet strands across face
-        for i, (sx, ln, w) in enumerate(((-62, 150, 9), (-48, 110, 4), (66, 165, 8), (50, 120, 3))):
+        for i, (sx, ln, w) in enumerate(() if not C.get('wet') else ((-62, 150, 9), (-48, 110, 4), (66, 165, 8), (50, 120, 3))):
             sw = 3 * math.sin(T * 0.8 + i)
             c.new_path(); c.move_to(sx + tx * 0.5, -75); c.curve_to(sx + tx * 0.5 + 14 + sw, -10, sx + tx * 0.5 - 10, 50, sx + tx * 0.5 + 6 + sw, -75 + ln)
             src(c, hair_l); c.set_line_width(w); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()

@@ -1,0 +1,115 @@
+{
+ "mood": "romance",
+ "voices": {
+  "narrator": [
+   "bf_emma",
+   0.92
+  ],
+  "zara": [
+   "af_bella",
+   0.95
+  ],
+  "adam": [
+   "am_liam",
+   0.95
+  ],
+  "guard": [
+   "am_eric",
+   1.0
+  ]
+ },
+ "title": {
+  "series": "THE 11:40",
+  "style": "romance",
+  "ep": "EPISODE 11  \u00b7  PART 1",
+  "l1": "Part 2 drops tomorrow",
+  "l2": "Follow so you don\u2019t miss it"
+ },
+ "params": {
+  "platform": {
+   "clock": "11:40",
+   "zara": true,
+   "train": 1
+  },
+  "carriage": {
+   "adam": "asleep",
+   "leave": 1
+  },
+  "notebook": {
+   "pages": "sketches",
+   "last": "Tomorrow, I finally say hello."
+  },
+  "closeup#z": {
+   "who": "zara",
+   "expr": "shock",
+   "bg": "train",
+   "amb": "train"
+  }
+ },
+ "lines": [
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "Every night at eleven forty, Zara caught the last train home."
+  },
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "Same platform. Same carriage. Same quiet stranger across from her."
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "He always fell asleep by the second stop. She never knew his name."
+  },
+  {
+   "scene": "carriage",
+   "who": "narrator",
+   "pre": 0.4,
+   "text": "Tonight, he rushed off at his stop. And left his notebook on the seat.",
+   "sfx": [
+    "doors"
+   ]
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.6,
+   "text": "She shouldn't have opened it. But she did."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.4,
+   "text": "Page after page, it was her. Reading. Laughing. Looking out the window."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.3,
+   "text": "Every night. For one whole year."
+  },
+  {
+   "scene": "notebook",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "The last page said: Tomorrow, I finally say hello."
+  },
+  {
+   "scene": "closeup#z",
+   "who": "zara",
+   "pre": 0.6,
+   "text": "Tomorrow?",
+   "fx": "close"
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}

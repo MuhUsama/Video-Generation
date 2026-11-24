@@ -1,2 +1,5 @@
 pipeline/models/
 __pycache__/
+episodes/*/mix.wav
+episodes/*/timing.json
+episodes/*/still_*.png

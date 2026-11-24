@@ -1,0 +1,118 @@
+{
+ "mood": "romance",
+ "voices": {
+  "narrator": [
+   "bf_emma",
+   0.92
+  ],
+  "zara": [
+   "af_bella",
+   0.95
+  ],
+  "adam": [
+   "am_liam",
+   0.95
+  ],
+  "guard": [
+   "am_eric",
+   1.0
+  ]
+ },
+ "title": {
+  "series": "THE 11:40",
+  "style": "romance",
+  "ep": "EPISODE 15  \u00b7  FINALE",
+  "l1": "The End",
+  "l2": "New story next week. Follow for more."
+ },
+ "params": {
+  "platform": {
+   "clock": "12:00",
+   "storm": true,
+   "zara": true,
+   "lights_out": 1,
+   "adam_arrive": 2
+  },
+  "closeup#z": {
+   "who": "zara",
+   "expr": "shock",
+   "expr2": "calm",
+   "bg": "platform",
+   "amb": "rain_out"
+  },
+  "closeup#a": {
+   "who": "adam",
+   "expr": "calm",
+   "bg": "platform",
+   "amb": "rain_out",
+   "smile": true
+  },
+  "closeup#z2": {
+   "who": "zara",
+   "expr": "calm",
+   "bg": "platform",
+   "amb": "rain_out",
+   "smile": true
+  },
+  "sunrise": {}
+ },
+ "lines": [
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 1.0,
+   "text": "Midnight. Platform four. Empty. Just the rain.",
+   "sfx": [
+    "thunder"
+   ]
+  },
+  {
+   "scene": "platform",
+   "who": "narrator",
+   "pre": 0.5,
+   "text": "The lights flickered out. Zara turned to leave."
+  },
+  {
+   "scene": "platform",
+   "who": "adam",
+   "pre": 0.8,
+   "text": "You won't catch the last train. There isn't one tonight."
+  },
+  {
+   "scene": "closeup#z",
+   "who": "zara",
+   "pre": 0.5,
+   "text": "You walked here? In this?"
+  },
+  {
+   "scene": "closeup#a",
+   "who": "adam",
+   "pre": 0.4,
+   "text": "Six miles. I wasn't going to miss you again."
+  },
+  {
+   "scene": "closeup#a",
+   "who": "adam",
+   "pre": 0.5,
+   "text": "Hi. I'm Adam."
+  },
+  {
+   "scene": "closeup#z2",
+   "who": "zara",
+   "pre": 0.5,
+   "text": "I know. Hello, Adam."
+  },
+  {
+   "scene": "sunrise",
+   "who": "narrator",
+   "pre": 0.8,
+   "text": "Some people meet by accident. Some ride the same train for a year, waiting for the courage to say hello."
+  },
+  {
+   "scene": "title",
+   "who": "none",
+   "pre": 0.6,
+   "text": ""
+  }
+ ]
+}
