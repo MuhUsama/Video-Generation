@@ -59,8 +59,25 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
     skin_l = lit(skin); hair_l = lit(hair); jacket_l = lit(jacket); shirt_l = lit(shirt)
     E = blend_expr(expr, expr2, ek) if expr2 else EXPR[expr]
     br = 1.5 * math.sin(T * 1.6 + seed) if breathe else 0
-    c.save(); c.translate(x, y); c.scale(s, s)
+    sway = 0.0
+    if breathe:
+        # idle life: weight shift, head drift, nods while talking, eye saccades
+        sway = 5 * math.sin(T * 0.57 + seed * 2.3) + 2 * math.sin(T * 1.21 + seed)
+        tilt = tilt + 0.028 * math.sin(T * 0.83 + seed * 1.7) + 0.012 * math.sin(T * 1.9 + seed)
+        if mouth > 0.08: tilt += 0.03 * mouth * math.sin(T * 6.5)
+        k = int((T + seed * 3.1) * 0.9); fr = (T + seed * 3.1) * 0.9 - k
+        def _sac(n): r = math.sin(n * 12.9898 + seed * 78.233) * 43758.5453; return (r - math.floor(r)) * 2 - 1
+        e = clamp(fr / 0.08)
+        look = (look[0] + 0.16 * (_sac(k) * e + _sac(k - 1) * (1 - e)), look[1] + 0.10 * (_sac(k + 77) * e + _sac(k + 76) * (1 - e)))
+    c.save(); c.translate(x, y); c.scale(s, s); c.translate(sway, 0)
     if alpha < 1: c.push_group()
+    if body:  # soft cast shadow on the wall behind, thrown away from the key light
+        lx0, ly0 = light
+        sx0, sy0 = -lx0 * 70, 150 - ly0 * 30
+        g = cairo.RadialGradient(sx0, sy0, 60, sx0, sy0, 420)
+        g.add_color_stop_rgba(0, 0, 0, 0, 0.42); g.add_color_stop_rgba(1, 0, 0, 0, 0)
+        c.save(); c.translate(sx0, sy0); c.scale(1, 1.35); c.translate(-sx0, -sy0)
+        c.set_source(g); c.new_path(); c.arc(sx0, sy0, 420, 0, 2 * PI); c.fill(); c.restore()
     # ---------- body ----------
     if body:
         c.save(); c.translate(0, br)
@@ -68,6 +85,7 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
         c.move_to(-34, 120); c.line_to(34, 120)
         c.curve_to(120, 150, 210, 170, 235, 300); c.line_to(260, 1100); c.line_to(-260, 1100); c.line_to(-235, 300)
         c.curve_to(-210, 170, -120, 150, -34, 120); c.close_path(); inkfill(c, jacket_l, 8)
+        _body_shade(c, light, light_col)
         outfit = C.get('outfit', 'jacket')
         if outfit == 'hoodie':
             c.new_path(); c.move_to(-110, 150); c.curve_to(-100, 60, 100, 60, 110, 150); c.curve_to(60, 175, -60, 175, -110, 150); inkfill(c, mix(jacket_l, hexc('000000'), 0.25), 5)
@@ -206,8 +224,16 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
         else:
             c.new_path(); c.move_to(mx - mw, my - curve * 7); c.curve_to(mx - mw * 0.4, my + curve * 5, mx + mw * 0.4, my + curve * 5, mx + mw, my - curve * 7)
             src(c, hexc('3a1a14')); c.set_line_width(4); c.set_line_cap(cairo.LINE_CAP_ROUND); c.stroke()
-        # lighting: shadow on far side from light
+        # form: occlusion under the hairline and jaw, soft sheen on the lit cheek/forehead
         lx, ly = light
+        g = cairo.LinearGradient(0, -112, 0, -40); g.add_color_stop_rgba(0, 0, 0, 0, 0.28); g.add_color_stop_rgba(1, 0, 0, 0, 0)
+        c.set_source(g); c.paint()
+        g = cairo.LinearGradient(0, 112, 0, 70); g.add_color_stop_rgba(0, 0.2, 0.05, 0.05, 0.25); g.add_color_stop_rgba(1, 0.2, 0.05, 0.05, 0)
+        c.set_source(g); c.paint()
+        for (hx, hy, hr_, ha) in ((lx * 45 + tx * 0.5, -55, 38, 0.13), (lx * 55 + tx, 28, 26, 0.10)):
+            g = cairo.RadialGradient(hx, hy, 0, hx, hy, hr_)
+            g.add_color_stop_rgba(0, 1, 0.97, 0.92, ha); g.add_color_stop_rgba(1, 1, 0.97, 0.92, 0); c.set_source(g); c.paint()
+        # lighting: shadow on far side from light
         g = cairo.LinearGradient(lx * 110, ly * 110, -lx * 110, -ly * 110)
         g.add_color_stop_rgba(0, light_col[0], light_col[1], light_col[2], 0.2)
         g.add_color_stop_rgba(0.5, light_col[0], light_col[1], light_col[2], 0.0)
@@ -229,6 +255,25 @@ def draw(c, who, x, y, s, T=0.0, turn=0.0, tilt=0.0, look=(0.0, 0.0), expr='neut
     c.restore()  # head transform
     if alpha < 1: c.pop_group_to_source(); c.paint_with_alpha(alpha)
     c.restore()
+
+def _body_shade(c, light, light_col):
+    """Volume on the torso: key light wraps one side, the other falls into shadow, plus a rim."""
+    lx, ly = light
+    c.save()
+    c.new_path(); c.move_to(-34, 120); c.line_to(34, 120)
+    c.curve_to(120, 150, 210, 170, 235, 300); c.line_to(260, 1100); c.line_to(-260, 1100); c.line_to(-235, 300)
+    c.curve_to(-210, 170, -120, 150, -34, 120); c.close_path(); c.clip()
+    sg = 1 if lx >= 0 else -1
+    g = cairo.LinearGradient(sg * 260, 0, -sg * 260, 0)
+    g.add_color_stop_rgba(0, light_col[0], light_col[1], light_col[2], 0.12)
+    g.add_color_stop_rgba(0.45, 0, 0, 0, 0.0); g.add_color_stop_rgba(1, 0, 0, 0, 0.45)
+    c.set_source(g); c.paint()
+    g = cairo.LinearGradient(0, 120, 0, 700); g.add_color_stop_rgba(0, 0, 0, 0, 0); g.add_color_stop_rgba(1, 0, 0, 0, 0.35)
+    c.set_source(g); c.paint()
+    g = cairo.LinearGradient(0, 110, 0, 220); g.add_color_stop_rgba(0, 0, 0, 0, 0.45); g.add_color_stop_rgba(1, 0, 0, 0, 0)  # chin shadow
+    c.set_source(g); c.new_path(); c.arc(0, 130, 120, 0, PI); c.fill()
+    c.restore()
+
 
 def _cap(c, tx, back=False):
     c.new_path(); c.move_to(-100 + tx * 0.3, -55); c.curve_to(-100, -150, 100, -150, 100 + tx * 0.3, -55); c.close_path()

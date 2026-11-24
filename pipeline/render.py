@@ -1357,17 +1357,34 @@ def captions(c, T):
                 x += text(c, words[j] + ' ', x, y, 66, col, align='l', alpha=prog(T, times[j], times[j] + 0.08), outline=12, slant=sl)
             return
 
+import os
+CINEMA = os.environ.get('NS_CLASSIC') != '1'
+if CINEMA:
+    import cinema
+    CIN = cinema.Cinema(TM, W, H, FPS)
+
 def frame(T, caps=True):
     surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H); c = cairo.Context(surf); rect(c, 0, 0, W, H, BLACK)
+    sid = None; is_cut = False
     for s in SCENES_T:
         if s['start'] <= T < s['end']:
             t = T - s['start']; d = s['end'] - s['start']; sid = s['id']
+            is_cut = t < 1.5 / FPS
             P = PARAMS.get(sid, {})
-            c.save(); SCENES[sid](c, T, t, d, s, P); c.restore()
+            c.save()
+            if CINEMA: CIN.camera(c, T, s, t, d)
+            SCENES[sid](c, T, t, d, s, P); c.restore()
             k = min(prog(t, 0, 0.35) if s['start'] > 0 else prog(t, 0, 0.8), 1 - prog(t, d - 0.25, d))
             if sid == 'title': k = 1
+            if CINEMA and sid != 'title': CIN.foreground(c, T, sid)
             if k < 1: rect(c, 0, 0, W, H, BLACK, 1 - k)
-    post(c, T)
+    if CINEMA:
+        surf.flush()
+        arr = np.ndarray((H, W, 4), np.uint8, surf.get_data())
+        CIN.grade(arr, T, sid or 'title', flash=flash(T) if sid in ('exterior', 'road', 'gas_ext', 'hosp_ext', 'behind') else 0.0, is_cut=is_cut)
+        surf.mark_dirty()
+    else:
+        post(c, T)
     if caps: captions(c, T)
     if T > TOTAL - 0.6: rect(c, 0, 0, W, H, BLACK, prog(T, TOTAL - 0.6, TOTAL))
     return surf
@@ -1377,9 +1394,29 @@ if __name__ == '__main__':
         for T in [float(x) for x in sys.argv[3:]]: frame(T).write_to_png(EP + f'still_{T:05.1f}.png')
         sys.exit()
     n = int(TOTAL * FPS)
+    jobs = int(os.environ.get('NS_JOBS', '1'))
+    if os.environ.get('NS_CHUNK'):  # worker: render frames a..b to a high-quality video-only segment
+        a, b = map(int, os.environ['NS_CHUNK'].split(':'))
+        ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgra', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
+                               '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '12', '-pix_fmt', 'yuv420p', EP + f'seg_{a:06d}.mp4'], stdin=subprocess.PIPE)
+        for i in range(max(0, a - 6), b):  # warm up the shutter blend on a few frames before the chunk
+            fr = bytes(frame(i / FPS).get_data())
+            if i >= a: ff.stdin.write(fr)
+        ff.stdin.close(); ff.wait(); sys.exit()
+    enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-tune', 'grain', '-maxrate', '8M', '-bufsize', '16M',
+           '-pix_fmt', 'yuv420p', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
+           '-shortest', '-movflags', '+faststart', EP + 'video.mp4']
+    if jobs > 1:
+        step = -(-n // jobs); procs = []
+        for a in range(0, n, step):
+            procs.append(subprocess.Popen([sys.executable] + sys.argv[:2], env={**os.environ, 'NS_CHUNK': f'{a}:{min(n, a + step)}'}))
+        for p_ in procs: p_.wait()
+        segs = [EP + f'seg_{a:06d}.mp4' for a in range(0, n, step)]
+        open(EP + 'segs.txt', 'w').write(''.join(f"file '{x}'\n" for x in segs))
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', EP + 'segs.txt', '-i', EP + 'mix.wav'] + enc, check=True)
+        for x in segs: os.remove(x)
+        os.remove(EP + 'segs.txt'); print('done', EP); sys.exit()
     ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgra', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
-                           '-i', EP + 'mix.wav', '-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-tune', 'grain', '-maxrate', '8M', '-bufsize', '16M',
-                           '-pix_fmt', 'yuv420p', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
-                           '-shortest', '-movflags', '+faststart', EP + 'video.mp4'], stdin=subprocess.PIPE)
+                           '-i', EP + 'mix.wav'] + enc, stdin=subprocess.PIPE)
     for i in range(n): ff.stdin.write(bytes(frame(i / FPS).get_data()))
     ff.stdin.close(); ff.wait(); print('done', EP)
